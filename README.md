@@ -1,6 +1,6 @@
 # PyChat
 
-This is used for realtime communication within python's terminal. Communicate easily in a group discussion or a direct chat one-on-one with another person. 
+This is used for realtime communication within python's terminal. Communicate easily in a group discussion or a direct chat one-on-one with another person.
 
 ## Getting Started
 
@@ -38,11 +38,12 @@ Please read [CONTRIBUTING.md] for details on our code of conduct, and the proces
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/TylerThompson/pychat/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/TylerThompson/pychat/tags).
 
 ## Authors
 
 * **Tyler Thompson** - *Initial work* - [Personal Website](http://tylerthompson.me)
+* **Collin Stolpa** - *Initial work* 
 
 See also the list of [contributors](https://github.com/TylerThompson/pychat/contributors) who participated in this project.
 
