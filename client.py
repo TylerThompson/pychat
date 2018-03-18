@@ -4,9 +4,11 @@ import select
 import sys
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect(("127.0.0.1, 8080))
+server.connect(("127.0.0.1", 8080))
 
 while True:
+
+
 
     # maintains a list of possible input streams
     sockets_list = [sys.stdin, server]
@@ -20,6 +22,7 @@ while True:
     below.If the user wants to send a message, the else
     condition will evaluate as true'''
     read_sockets, write_socket, error_socket = select.select(sockets_list, [], [])
+
 
     for socks in read_sockets:
         if socks == server:

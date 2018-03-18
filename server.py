@@ -25,6 +25,15 @@ increased as per convenience.
 """
 server.listen(100)
 
+# display a help message to show what commands that the client can use to communicate with the server
+
+def showHelp():
+    print("List of possible comands:")
+    print("\t View friends \n \t Add Friend \n \t Remove Friend \n \t Direct Message / DM \n \t Boradcast \n \t Quit \n \t Help / --h ")
+
+showHelp()
+
+
 list_of_clients = []
 
 def clientthread(conn, addr):
