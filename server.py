@@ -25,13 +25,20 @@ increased as per convenience.
 """
 server.listen(100)
 
+
+# Give each file a variable
+friendship = "friendship"
+pending = "pending"
+dm = "directMessage"
+registered = "registered"
+
+
+
 # display a help message to show what commands that the client can use to communicate with the server
+def helpMenu(conn):
+    helpCmds = "List of possible comands:\n \t View friends \n \t Add Friend \n \t Remove Friend \n \t Direct Message / DM \n \t Boradcast \n \t Quit \n \t Help / --h "
+    conn.send(helpCmds.encode())
 
-def showHelp():
-    print("List of possible comands:")
-    print("\t View friends \n \t Add Friend \n \t Remove Friend \n \t Direct Message / DM \n \t Boradcast \n \t Quit \n \t Help / --h ")
-
-showHelp()
 
 
 list_of_clients = []
@@ -71,12 +78,39 @@ def remove(connection):
     if connection in list_of_clients:
         list_of_clients.remove(connection)
 
+""" Add a friendship connection in pending.txt. In pending.txt, each line will show 
+    what users are requesting a friendship with what user  A,B    A is requesting a friendship with B.
+    There will be no duplicates whereas B,A would be considered a duplicate to A,B """
+def addFriend():
+
+    return
+
+""" Will show all of the friends with whom the client / requesting user,  is friends with"""
+def viewFriends():
+
+
+    return
+
+""" returns quit if an error is thrown or if a user logs off"""
+def quit():
+
+    return quit()
+
+"""Login allows usesr to login and start to use the functions of messageing and friendship manipulation"""
+def login():
+
+    return
+
+
 while True:
     """Accepts a connection request and stores two parameters, 
     conn which is a socket object for that user, and addr 
     which contains the IP address of the client that just 
     connected"""
     conn, addr = server.accept()
+
+    #send message menu
+    helpMenu(conn)
 
     """Maintains a list of clients for ease of broadcasting
     a message to all available people in the chatroom"""

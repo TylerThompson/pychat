@@ -5,6 +5,7 @@ import sys
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.connect(("172.22.144.137", 8080))
+#server.connect(("localhost", 8080))
 
 while True:
 
