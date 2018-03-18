@@ -4,7 +4,7 @@ import select
 import sys
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect(("127.0.0.1, 8080))
+server.connect(("127.0.0.1", 8080))
 
 while True:
 
@@ -24,10 +24,10 @@ while True:
     for socks in read_sockets:
         if socks == server:
             message = socks.recv(2048)
-            print(message)
+            print(message.decode())
         else:
             message = sys.stdin.readline()
-            server.send(message)
+            server.send(message.encode())
             sys.stdout.write("<You>")
             sys.stdout.write(message)
             sys.stdout.flush()
