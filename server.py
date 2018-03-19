@@ -137,7 +137,14 @@ def search_file(GLOBAL_VAR, search):
         for x in li:
             if x.contains(search):
                 return li
-
+    fp.close() 
+  
+def add_item(GLOBAL_VAR, message):
+    '''This function will add a message that the user enters, into the DM.txt file
+    fp = open(GLOBAL_VAR, "a+")
+    fp.write(message)
+    fp.close()
+            
 
 while True:
     """Accepts a connection request and stores two parameters, 
