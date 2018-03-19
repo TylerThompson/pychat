@@ -44,6 +44,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 * **Tyler Thompson** - *Initial work* - [Personal Website](http://tylerthompson.me)
 * **Collin Stolpa** - *Initial work* 
+* **Natalie Hagenow** - *Initial work*
 
 See also the list of [contributors](https://github.com/TylerThompson/pychat/contributors) who participated in this project.
 
