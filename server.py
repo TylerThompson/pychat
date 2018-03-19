@@ -102,6 +102,17 @@ def login():
     return
 
 
+def search_file(GLOBAL_VAR, search):
+    '''This function searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that 
+    reads all the lines and within doing that it uses the .split() function that allows it to read between the determinators'''
+    fp = open(GLOBAL_VAR, "r")
+    for line in fp.readlines():
+        li = line.split(';')
+        for x in li:
+            if x.contains(search):
+                return li
+
+
 while True:
     """Accepts a connection request and stores two parameters, 
     conn which is a socket object for that user, and addr 
