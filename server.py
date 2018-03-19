@@ -38,7 +38,7 @@ class User:
     fullname = ""
     email = ""
     conn = ""
-
+    dm = "" # Person who we are currently dming (if no one, then we are broadcasting)
 
 # display a help message to show what commands that the client can use to communicate with the server
 def helpMenu(new_user):
@@ -47,22 +47,68 @@ def helpMenu(new_user):
 
 def clientthread(new_user, addr):
     ''' Sends a message to the client who'S user is conn '''
-    new_user.conn.send("Welcome to this chat room!".encode())
+    try:
+        new_user.conn.send("Welcome to this chat room!".encode())
 
-    while True:
-        try:
-            message = new_user.conn.recv(2048)
-            if message:
-                # Print message and user who sent it
-                print("<" + addr[0] + "> " + message)
-                # Calls broadcast function to send message to all
-                message_to_send = "<" + addr[0] + "> " + message
-                broadcast(message_to_send, new_user)
-            else:
-                # Remove connection from pool
-                remove(new_user.conn)
-        except:
-            continue
+        while True:
+            try:
+                message = new_user.conn.recv(2048)
+                if message:
+                    # Process the message that the user sent for commands
+                    if message.contains(" "):
+                        msg = message.split(" ")
+                        if msg == "help" or msg == "-h":
+                            helpMenu(new_user)
+                            continue
+                        elif msg == "quit":
+                            quit()
+                            continue
+                        elif msg == "addfriend":
+                            if msg[1] == "":
+                                new_user.conn.send("You must use the friends username to add them")
+                            addFriend(new_user, msg[1])
+                            continue
+                        elif msg == "removefriend":
+                            if msg[1] == "":
+                                new_user.conn.send("You must use the friends username to remove them")
+                            removeFriend(new_user, msg[1])
+                            continue
+                        elif msg == "viewfriends":
+                            viewFriends(new_user)
+                            continue
+                        elif msg == "direct":
+                            if msg[1] == "":
+                                new_user.conn.send("You must use the friends username to direct them")
+                                # Send friend a message that you want to direct them
+                                new_user.conn.send("You are now in direct mode with " + msg[1])
+                                # Send notification to friend
+                            continue
+                        elif msg == "broadcast":
+                            new_user.dm = ""
+                            new_user.conn.send("You are not in broadcast mode")
+                        else:
+                            sendMessage(new_user, message, addr)
+                    sendMessage(new_user, message, addr)
+                else:
+                    # Remove connection from pool
+                    remove(new_user)
+            except:
+                continue
+    except:
+        print("connection closed by client")
+        remove(new_user)
+
+def sendMessage(new_user, message, addr):
+    # Print message and user who sent it
+    print("<" + addr[0] + "> " + message)
+    # Calls broadcast function to send message to all
+    message_to_send = "<" + addr[0] + "> " + message
+    broadcast(message_to_send, new_user)
+
+def remove(new_usern):
+    ''' Remove client from pool of other clients'''
+    if new_user in list_of_clients:
+        list_of_clients.remove(new_user)
 
 def broadcast(message, new_user):
     ''' Broadcast a message to all connected clients '''
@@ -74,6 +120,22 @@ def broadcast(message, new_user):
                 clients.close()
                 # if the link is broken, we remove the client
                 remove(clients)
+
+def direct(message, new_user):
+    ''' Send a message to a user if you are friends with them'''
+    # Check if users are friends
+    if checkFriends(new_user, new_user.dm):
+        # Users are friends
+        for clients in list_of_clients:
+            try:
+                # Make sure we are only messaging the client/friend
+                if clients.username == new_user.dm and clients.username != new_user.username:
+                    clients.send(message.encode())
+            except:
+                clients.conn.close()
+                remove(clients)
+    else:
+        new_user.conn.send("You are not friends with the user, you need to be in order to message them")
 
 def checkFriends(new_user, usernameOfFriend):
     ''' Check if users are friends or not'''
@@ -90,46 +152,52 @@ def checkFriends(new_user, usernameOfFriend):
     else:
         return False
 
-
-def direct(message, new_user, usernameOfDirect):
-    ''' Send a message to a user if you are friends with them'''
-    # Check if users are friends
-    if checkFriends(new_user, usernameOfDirect):
-        # Users are friends
-        for clients in list_of_clients:
-            try:
-                # Make sure we are only messaging the client/friend
-                if clients.username == usernameOfDirect and clients.username != new_user.username:
-                    clients.send(message.encode())
-            except:
-                clients.conn.close()
-                remove(clients)
-    else:
-        new_user.conn.send("You are not friends with the user, you need to be in order to message them")
-
-
-def remove(new_usern):
-    ''' Remove client from pool of other clients'''
-    if new_user in list_of_clients:
-        list_of_clients.remove(new_user)
-
-def addFriend(GLOBAL_VAR, friendReq):
+def addFriend(new_user, friendReq):
     '''Add a friendship connection in pending.txt. In pending.txt, each line will show
        what users are requesting a friendship with what user  A,B    A is requesting a friendship with B.
        There will be no duplicates whereas B,A would be considered a duplicate to A,B '''
     #friendReq is the friend that is being requested to add as a friend
-
-    file = open(GLOBAL_VAR, "r+")
-    #check if the request has been made already / is still pending
-    for line in file.readlines():
-        li = line.split(";")
-        for x in li:
-            if x.contains(friendReq):
-                return li
-
+    viewP = searchPendingRequests(new_user, friendReq)
+    if viewP != []:
+        # You already sent a request to this user
+        new_user.conn.send("You already sent a request to this user")
+        return False
+    # Check if user sent request to me
+    viewM = viewPendingRequests(new_user)
+    if viewM != []:
+        # User sent me a friend request, approve it
+        add_item(FRIENDSHIP, new_user.username+";"+friendReq)
+        # Let the user know the friend request has been approved
+        new_user.conn.send("Friend request approved")
+        return True
     # check if the users are already friends
-
+    viewF = viewFriends(new_user)
+    for line in viewF:
+        if line.contains(friendReq):
+            new_user.conn.send("You are already friends")
+            return True
     #if request hasnt been made or the users are not friends add a request to pending.txt
+    if viewP == [] and viewM == []:
+        # Friend request has not been made yet, lets add it
+        add_item(PENDING, new_user.username+";"+friendReq)
+        # Lets send a broadcast to the user to let them know about a new friend
+        for clients in list_of_clients:
+            # Loop through all the clients to find a username and send message to that connection
+            if clients != friendReq:
+                try:
+                    clients.send(new_user.username+" sent you a friend request: type (approve/deny "+new_user.username+")".encode())
+                except:
+                    new_user.conn.send("There was an error sending your friend request")
+                    return False
+        new_user.conn.send("Friend request sent to " + friendReq)
+        return True
+
+def removeFriend(new_user, friend):
+    ''' Remove a person from pending or friendships'''
+    remove_item(FRIENDSHIP, new_user.username, friend)
+    remove_item(PENDING, new_user.username, friend)
+    new_user.conn.send("You have removed " + friend.encode())
+    return True
 
 def viewFriends(user):
     '''Will show all of the friends with whom the client / requesting user,  is friends with'''
@@ -158,6 +226,17 @@ def viewFriends(new_user, usernameToSearch):
             return True
     return False
 
+def viewSentPendingRequests(new_user):
+    ''' View all requests i sent which are pending friend requests'''
+    # Get all my pending friend requests
+    pending = []
+    view = search_file(PENDING, new_user.username)
+    for line in view:
+        f = line.split(';')
+        if f[0] == new_user.username: # This is the person who sent the request
+            pending.append(f[1])
+    return pending
+
 def viewPendingRequests(new_user):
     ''' View all my pending friend requests'''
     # Get all my pending friend requests
@@ -165,9 +244,7 @@ def viewPendingRequests(new_user):
     view = search_file(PENDING, new_user.username)
     for line in view:
         f = line.split(';')
-        if f[0] == new_user.username:
-            pending.append(f[1])
-        elif f[1] == new_user.username:
+        if f[1] == new_user.username:  # This is the requestee
             pending.append(f[0])
     return pending
 
@@ -183,8 +260,8 @@ def quit():
     '''returns quit if an error is thrown or if a user logs off'''
     return "quit"
 
-"""Login allows usesr to login and start to use the functions of messageing and friendship manipulation"""
 def login(new_user):
+    '''Login allows user to login and start to use the functions of mmessagingand friendship manipulation'''
     tryAgain = True
     while tryAgain:
         fullName = ""
@@ -261,15 +338,18 @@ def register(new_user):
 def loginOrRegister(new_user):
     ''' Ask the user if they want to login or register'''
     new_user.conn.send("Would you like to login or register? (0 = Login, 1= Register)".encode())
-    choice = new_user.conn.recv(1024)
-    if int(choice) is 1:
-        register(new_user)
-    else:
-        login(new_user)
-    return True
+    try:
+        choice = new_user.conn.recv(1024)
+        if int(choice) is 1:
+            register(new_user)
+        else:
+            login(new_user)
+        return True
+    except:
+        print('connection closed with client')
 
-""" View current pending request for the currennt user, return true and a list the current pending requests"""
 def viewRequests(search):
+    '''View current pending request for the currennt user, return true and a list the current pending requests'''
     f = []
     fp = open(PENDING, "r")
     # {"friendA: name, friendB: name2, date: 10-20} <-- A made the friend request
@@ -297,33 +377,46 @@ def add_item(GLOBAL_VAR, message):
     fp = open(GLOBAL_VAR, "a+")
     fp.write(message)
     fp.close()
-            
+
+def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
+    ''' Remove a person from the friendship, pending'''
+    f = open(GLOBAL_VAR, 'r')
+    lines = f.readlines()
+    f.close()
+    f = open(GLOBAL_VAR, 'w')
+    for line in lines:
+        if not line.contains(personBeingRemoved) and not line.contains(personRemoving):
+            # Lets remove the person from the line by not adding them
+            f.write(line)
+    f.close()
 
 while True:
     """Accepts a connection request and stores two parameters, 
     conn which is a socket object for that user, and addr 
     which contains the IP address of the client that just 
     connected"""
-    conn, addr = server.accept()
-    # Create a new user
-    new_user = User()
-    new_user.conn = conn
-    # Pass that user into loginOrRegister
-    loginOrRegister(new_user)
+    try:
+        conn, addr = server.accept()
+        # Create a new user
+        new_user = User()
+        new_user.conn = conn
+        # Pass that user into loginOrRegister
+        loginOrRegister(new_user)
 
-    #send message menu
-    helpMenu(conn)
+        #send message menu
+        helpMenu(conn)
 
-    """Maintains a list of clients for ease of broadcasting
-    a message to all available people in the chatroom"""
-    list_of_clients.append(conn)
+        """Maintains a list of clients for ease of broadcasting
+        a message to all available people in the chatroom"""
+        list_of_clients.append(conn)
 
-    # prints the address of the user that just connected
-    print(addr[0] + " connected")
+        # prints the address of the user that just connected
+        print(addr[0] + " connected")
 
-    # creates and individual thread for every user
-    # that connects
-    start_new_thread(clientthread, (new_user, addr))
+        # creates and individual thread for every user that connects
+        start_new_thread(clientthread, (new_user, addr))
+    except:
+        print("The client closed connection before it could be established")
 
 new_user.conn.close()
 server.close()

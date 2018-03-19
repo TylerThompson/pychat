@@ -4,13 +4,10 @@ import select
 import sys
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect(("172.22.144.137", 8080))
+server.connect(("127.0.0.1", 8080))
 #server.connect(("localhost", 8080))
 
 while True:
-
-
-
     # maintains a list of possible input streams
     sockets_list = [sys.stdin, server]
 
@@ -29,6 +26,9 @@ while True:
     for socks in read_sockets:
         if socks == server:
             message = socks.recv(2048)
+            if message == "quit":
+                server.close()
+                quit()
             print(message.decode())
         else:
             message = sys.stdin.readline()
@@ -36,4 +36,4 @@ while True:
             sys.stdout.write("<You>")
             sys.stdout.write(message)
             sys.stdout.flush()
-server.close()
+#server.close()
