@@ -45,7 +45,7 @@ list_of_clients = []
 
 def clientthread(conn, addr):
     ''' Sends a message to the client who'S user is conn '''
-    conn.send("Welcome to this chatroom!".encode())
+    conn.send("Welcome to this chat room!".encode())
 
     while True:
         try:
@@ -80,10 +80,27 @@ def remove(connection):
 
 """ Add a friendship connection in pending.txt. In pending.txt, each line will show 
     what users are requesting a friendship with what user  A,B    A is requesting a friendship with B.
-    There will be no duplicates whereas B,A would be considered a duplicate to A,B """
-def addFriend():
+    There will be no duplicates whereas B,A would be considered a duplicate to A,B 
+    
+    will call viewFriends() and viewRequests()"""
 
-    return
+def addFriend(GLOBAL_VAR, friendReq):
+    #friendReq is the friend that is being requested to add as a friend
+
+    file = open(GLOBAL_VAR, "r+")
+    #check if the request has been made already / is still pending
+    for line in file.readline():
+        li = line.split(";")
+        for x in li:
+            if x.contains(friendReq):
+                return li
+
+
+    # check if the users are already friends
+
+
+    #if request hasnt been made or the users are not friends add a request to pending.txt
+
 
 """ Will show all of the friends with whom the client / requesting user,  is friends with"""
 def viewFriends():
@@ -101,6 +118,15 @@ def login():
 
     return
 
+""" View current pending request for the currennt user, return true and a list the current pending requests"""
+def viewRequests(GLOBAL_VAR, search):
+    fp = open(GLOBAL_VAR, "r")
+    for line in fp.readlines():
+        li = line.split(';')
+        for x in li:
+            if x.contains(search):
+                return li
+    return
 
 def search_file(GLOBAL_VAR, search):
     '''This function searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that 
@@ -119,6 +145,8 @@ while True:
     which contains the IP address of the client that just 
     connected"""
     conn, addr = server.accept()
+
+
 
     #send message menu
     helpMenu(conn)

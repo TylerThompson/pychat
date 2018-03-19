@@ -24,6 +24,7 @@ while True:
     condition will evaluate as true'''
     read_sockets, write_socket, error_socket = select.select(sockets_list, [], [])
 
+    print("Type help or --h for command menu.")
 
     for socks in read_sockets:
         if socks == server:
