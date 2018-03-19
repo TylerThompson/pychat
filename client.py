@@ -4,7 +4,7 @@ import select
 import sys
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect(("127.0.0.1", 8080))
+server.connect(("", 8080))
 #server.connect(("localhost", 8080))
 
 while True:
@@ -36,4 +36,4 @@ while True:
             sys.stdout.write("<You>")
             sys.stdout.write(message)
             sys.stdout.flush()
-#server.close()
+server.close()

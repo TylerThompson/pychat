@@ -87,8 +87,8 @@ def clientthread(new_user, addr):
                             new_user.dm = ""
                             new_user.conn.send("You are not in broadcast mode")
                         else:
-                            sendMessage(new_user, message, addr)
-                    sendMessage(new_user, message, addr)
+                            sendMessage(new_user, message)
+                    sendMessage(new_user, message)
                 else:
                     # Remove connection from pool
                     remove(new_user)
@@ -98,11 +98,11 @@ def clientthread(new_user, addr):
         print("connection closed by client")
         remove(new_user)
 
-def sendMessage(new_user, message, addr):
+def sendMessage(new_user, message):
     # Print message and user who sent it
-    print("<" + addr[0] + "> " + message)
+    print("<" + new_user.username + "> " + message)
     # Calls broadcast function to send message to all
-    message_to_send = "<" + addr[0] + "> " + message
+    message_to_send = "<" + new_user.username + "> " + message
     broadcast(message_to_send, new_user)
 
 def remove(new_usern):
