@@ -4,12 +4,12 @@ import select
 import sys
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect(("", 8080))
+server.connect(("192.168.1.161", 8080))
 #server.connect(("localhost", 8080))
 
 while True:
     # maintains a list of possible input streams
-    sockets_list = [sys.stdin, server]
+    sockets_list = [socket.socket(), server]
 
     '''There are two possible input situations. Either the
     user wants to give  manual input to send to other people,
