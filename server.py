@@ -38,6 +38,7 @@ class User:
     fullname = ""
     email = ""
     conn = ""
+    active = False
     dm = "" # Person who we are currently dming (if no one, then we are broadcasting)
 
 # display a help message to show what commands that the client can use to communicate with the server
@@ -74,7 +75,9 @@ def clientthread(new_user, addr):
                             removeFriend(new_user, msg[1])
                             continue
                         elif msg == "viewfriends":
-                            viewFriends(new_user)
+                            v = viewFriends(new_user)
+                            for x in v:
+                                new_user.conn.send(str(x).encode())
                             continue
                         elif msg == "direct":
                             if msg[1] == "":
@@ -96,6 +99,7 @@ def clientthread(new_user, addr):
                 continue
     except:
         print("connection closed by client")
+        new_user.active = False
         remove(new_user)
 
 def sendMessage(new_user, message):
@@ -299,6 +303,7 @@ def login(new_user):
     new_user.username = username
     new_user.fullname = fullName
     new_user.email = email
+    new_user.active = True
     return True
 
 def register(new_user):
@@ -306,14 +311,38 @@ def register(new_user):
     tryAgain = True
     while tryAgain:
         # Sign up here
-        new_user.conn.send("Please enter a username: ".encode())
-        username = new_user.conn.recv(1024).decode()
-        new_user.conn.send("Please enter a email:".encode())
-        email = new_user.conn.recv(1024).decode()
+        usernameTryAagain = True
+        while usernameTryAagain:
+            new_user.conn.send("Please enter a username: ".encode())
+            username = new_user.conn.recv(1024).decode()
+            if len(username) >5 and not username.contains('.') and not username.contains(';') and not username.contains(' '):
+                usernameTryAagain = False
+            else:
+                new_user.conn.send('username cannot contain  (.; ) and length must be greater than 5'.encode())
+
+        emailTryAgain = True
+        while emailTryAgain:
+            new_user.conn.send("Please enter a email:".encode())
+            email = new_user.conn.recv(1024).decode()
+            if email.contains('@') and email.contains('.'):
+                emailTryAgain = False
+            else:
+                new_user.conn.send('email is not valid, try again'.encode())
+
         new_user.conn.send("What is your full name?".encode())
         fullName = new_user.conn.recv(1024).decode()
-        new_user.conn.send("Please enter a password".encode())
-        password = new_user.conn.recv(1024).decode()
+
+        passwordTryAgain = True
+        while passwordTryAgain:
+            new_user.conn.send("Please enter a password".encode())
+            password = new_user.conn.recv(1024).decode()
+            new_user.conn.send("Please enter a password again".encode())
+            password2 = new_user.conn.recv(1024).decode()
+            if(len(password>6) and password == password2):
+                passwordTryAgain = False
+            if(len(password)<6):
+                new_user.conn.send('password needs to be greater than 6 characters')
+
         # Check data to make sure that it is not already in user
         userInUse = False
         # {username, email, fullname, password}
