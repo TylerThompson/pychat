@@ -368,8 +368,8 @@ def loginOrRegister(new_user):
     ''' Ask the user if they want to login or register'''
     new_user.conn.send("Would you like to login or register? (0 = Login, 1= Register)".encode())
     try:
-        choice = new_user.conn.recv(1024)
-        if eval(choice) is 1:
+        choice = eval(new_user.conn.recv(1024))
+        if choice is 1:
             register(new_user)
         else:
             login(new_user)
