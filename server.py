@@ -367,15 +367,12 @@ def register(new_user):
 def loginOrRegister(new_user):
     ''' Ask the user if they want to login or register'''
     new_user.conn.send("Would you like to login or register? (0 = Login, 1= Register)".encode())
-    try:
-        choice = eval(new_user.conn.recv(1024))
-        if choice is 1:
-            register(new_user)
-        else:
-            login(new_user)
-        return True
-    except:
-        print('connection closed with client')
+    choice = eval(new_user.conn.recv(1024))
+    if choice is 1:
+        register(new_user)
+    else:
+        login(new_user)
+    return True
 
 def viewRequests(search):
     '''View current pending request for the currennt user, return true and a list the current pending requests'''
