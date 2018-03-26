@@ -1,6 +1,6 @@
 # PyChat
 
-<img src="https://github.com/TylerThompson/pychat/blob/master/PyChat.png?raw=true" style="height: 90px; width: 90px;" alt="pyChat" />
+<img src="https://github.com/TylerThompson/pychat/blob/master/PyChat.png?raw=true" height="90px" width="90px" alt="pyChat" />
 
 This is used for realtime communication within python's terminal. Communicate easily in a group discussion or a direct chat one-on-one with another person.
 
