@@ -60,7 +60,7 @@ class Window(Frame):
         email.insert(0, 'Email')
         email.place(x=5, y=160)
 
-        password = Entry(self, width=30)
+        password = Entry(self, show="*", width=30)
         password.insert(0, 'password')
         password.place(x=5, y=180)
 
@@ -98,6 +98,7 @@ class Window(Frame):
 # root window created. Here, that would be the only window, but
 # you can later have windows within windows.
 root = Tk()
+root.iconbitmap('pychat_2d5_icon.ico')
 root.geometry("200x400")
 
 # creation of an instance
