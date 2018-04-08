@@ -34,6 +34,8 @@ class Window(Frame):
 
         # create the file object)
         file = Menu(menu)
+        # create the file object)
+        edit = Menu(menu)
 
         # adds a command to the menu option, calling it exit, and the
         # command it runs on event is client_exit
@@ -41,9 +43,10 @@ class Window(Frame):
 
         # added "file" to our menu
         menu.add_cascade(label="File", menu=file)
+        # added "Edit" to our menu
+        menu.add_cascade(label="Edit", menu=edit)
 
-        # create the file object)
-        edit = Menu(menu)
+
 
         load = Image.open("PyChat.png")
         render = ImageTk.PhotoImage(load)
@@ -58,14 +61,18 @@ class Window(Frame):
 
         email = Entry(self, width=30)
         email.insert(0, 'Email')
+        #global emailInput
+        emailInput= email.get()
         email.place(x=5, y=160)
 
         password = Entry(self, show="*", width=30)
         password.insert(0, 'password')
         password.place(x=5, y=180)
 
-        btn = Button(self, text="Login", width=20)
-        btn.place(x=20, y=210)
+        #login button will open the message window if login is success
+        btn = Button(self, command = self.showMsgBox, width = 20, text = "Login")
+        btn.place(x=20, y=210 )
+        btn.grid
 
         title = Label(self, text="PyChat © 2018")
         title.place(x=50, y=380)
@@ -75,8 +82,20 @@ class Window(Frame):
         edit.add_command(label="Show Img", command=self.showImg)
         edit.add_command(label="Show Text", command=self.showText)
 
-        # added "file" to our menu
-        menu.add_cascade(label="Edit", menu=edit)
+
+
+
+
+    """if the login is a success show the message box GUI
+        BUG: the login window needs to close when the message box opens"""
+
+    def showMsgBox(self):
+        msgBox = Toplevel(height = 400, width = 400)  #Create a new window
+        msgBox.title("Message Box!")
+
+
+
+
 
     def showImg(self):
         load = Image.open("PyChat.png")
