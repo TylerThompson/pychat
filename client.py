@@ -6,8 +6,8 @@ import gui
 
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#server.connect(("", 8080))
 server.connect(("localhost", 8080))
+#server.connect(("172.122.144.137", 8080))
 
 
 

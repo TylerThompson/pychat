@@ -1,6 +1,6 @@
 # Simple enough, just import everything from tkinter.
 from tkinter import *
-from bootstrap_py import *
+
 
 # download and install pillow:
 # http://www.lfd.uci.edu/~gohlke/pythonlibs/#pillow
@@ -29,7 +29,7 @@ class Window(Frame):
         # allowing the widget to take the full space of the root window
         self.pack(fill=BOTH, expand=1)
 
-<<<<<<< HEAD
+
         # creating a menu instance
         menu = Menu(self.master)
         self.master.config(menu=menu)
@@ -50,8 +50,7 @@ class Window(Frame):
 
 
 
-=======
->>>>>>> 4c95381d6e1aba53c65f489f507c39539ac75bbb
+
         load = Image.open("PyChat.png")
         render = ImageTk.PhotoImage(load)
 
@@ -78,10 +77,44 @@ class Window(Frame):
         btn.place(x=20, y=210 )
         btn.grid
 
-        title = Label(self, text="PyChat © 2018")
-        title.place(x=50, y=380)
+        NewUsr = Label(self, text="New Users Register here")
+        NewUsr.place(x=30, y=275)
 
-<<<<<<< HEAD
+
+        #Labels so the user can register
+
+        #first name input
+        fullName = Entry(self,width = 30)
+        fullName.insert(0,'Full Name')
+        fullName.place(x = 5, y = 300)
+
+        #username input
+        username = Entry(self, width = 30)
+        username.insert(0,'Username')
+        username.place(x = 5 , y = 327)
+
+        #email input
+        email = Entry(self, width=30)
+        email.insert(0, 'Email')
+        email.place(x=5, y=354)
+
+        #register button
+
+        #login button will open the message window if login is success
+        btn = Button(self, command = self.showMsgBox, width = 20, text = "Register")
+        btn.place(x=20, y=210 )
+        btn.grid
+
+
+
+
+        title = Label(self, text="PyChat © 2018")
+        title.place(x=50, y=550)
+
+
+
+
+
         # adds a command to the menu option, calling it exit, and the
         # command it runs on event is client_exit
         edit.add_command(label="Show Img", command=self.showImg)
@@ -115,8 +148,7 @@ class Window(Frame):
         text = Label(self, text="Hey there good lookin!")
         text.pack()
 
-=======
->>>>>>> 4c95381d6e1aba53c65f489f507c39539ac75bbb
+
     def client_exit(self):
         exit()
 
@@ -125,7 +157,7 @@ class Window(Frame):
 # you can later have windows within windows.
 root = Tk()
 root.iconbitmap('pychat_2d5_icon.ico')
-root.geometry("200x400")
+root.geometry("200x600")
 
 # creation of an instance
 app = Window(root)

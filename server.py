@@ -416,6 +416,43 @@ def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
             f.write(line)
     f.close()
 
+
+
+""" Unread messages, will receive DM.txt the sender and receiver, it will be called when the user logs on 
+    a message box will pop up saying how many messages they have and from whom.
+    It will read through the file, find instances of the Direct messages between sender and target
+    if the target has an unread message from the sender it will display those messages in the direct message window with 
+    the sender. Once the message is read it will change the read receipt to true.
+    
+    DM.txt columns line Sender , target, time stamp, read receipt, content """
+
+def unread_msg(GLOBAL_VAR, sender, target):
+
+    #store the undread messages in unread
+    unread = []
+
+    fp = open(GLOBAL_VAR, "r")
+    for line in fp.readlines():
+        li = line.split(';')
+
+        #split the line values into variables
+        sndr = li[0]
+        targ = li[1]
+        time = li[2]
+        receipt = li[3]
+        content = li[4]
+
+        if target == targ :
+            unread.append(content)
+
+
+            # change the read receipt to true
+            receipt = 1
+
+    fp.close()
+    return unread
+
+
 while True:
     """Accepts a connection request and stores two parameters, 
     conn which is a socket object for that user, and addr 
