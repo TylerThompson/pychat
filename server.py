@@ -418,7 +418,8 @@ def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
 
 
 
-""" Unread messages, will receive DM.txt the sender and receiver, it will be called when the user logs on 
+    """ 
+    Unread messages, will receive DM.txt the sender and receiver, it will be called when the user logs on 
     a message box will pop up saying how many messages they have and from whom.
     It will read through the file, find instances of the Direct messages between sender and target
     if the target has an unread message from the sender it will display those messages in the direct message window with 
@@ -428,9 +429,6 @@ def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
     
     returns an array of messages that have not been read by the user
     """
-
-
-
 def unread_msg(GLOBAL_VAR, sender, target):
 
     unread = []

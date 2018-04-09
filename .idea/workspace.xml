@@ -11,11 +11,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="server.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="server.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/server.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="188">
-              <caret line="447" column="23" lean-forward="true" selection-start-line="447" selection-start-column="23" selection-end-line="447" selection-end-column="23" />
+            <state relative-caret-position="256">
+              <caret line="298" column="27" lean-forward="true" selection-start-line="298" selection-start-column="27" selection-end-line="298" selection-end-column="27" />
               <folding>
                 <element signature="e#56#69#0" expanded="true" />
               </folding>
@@ -23,7 +23,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="gui.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="gui.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gui.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="321">
@@ -652,22 +652,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/server.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="447" column="23" lean-forward="true" selection-start-line="447" selection-start-column="23" selection-end-line="447" selection-end-column="23" />
-          <folding>
-            <element signature="e#56#69#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/gui.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="321">
           <caret line="103" column="82" lean-forward="false" selection-start-line="103" selection-start-column="82" selection-end-line="103" selection-end-column="82" />
           <folding>
             <element signature="e#54#75#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/server.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="256">
+          <caret line="298" column="27" lean-forward="true" selection-start-line="298" selection-start-column="27" selection-end-line="298" selection-end-column="27" />
+          <folding>
+            <element signature="e#56#69#0" expanded="true" />
           </folding>
         </state>
       </provider>

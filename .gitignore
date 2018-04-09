@@ -11,6 +11,7 @@ __pycache__/
 ./idea/*
 .idea
 .idea/*
+.idea/workspace.xml
 
 # Distribution / packaging
 .Python
