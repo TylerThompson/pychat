@@ -9,6 +9,8 @@ __pycache__/
 # Work station files
 ./idea
 ./idea/*
+.idea
+.idea/*
 
 # Distribution / packaging
 .Python
