@@ -424,12 +424,17 @@ def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
     if the target has an unread message from the sender it will display those messages in the direct message window with 
     the sender. Once the message is read it will change the read receipt to true.
     
-    DM.txt columns line Sender , target, time stamp, read receipt, content """
+    DM.txt columns line Sender , target, time stamp, read receipt, content 
+    
+    returns an array of messages that have not been read by the user
+    """
+
+
 
 def unread_msg(GLOBAL_VAR, sender, target):
 
-    #store the undread messages in unread
     unread = []
+    result = ""
 
     fp = open(GLOBAL_VAR, "r")
     for line in fp.readlines():
@@ -442,12 +447,16 @@ def unread_msg(GLOBAL_VAR, sender, target):
         receipt = li[3]
         content = li[4]
 
-        if target == targ :
-            unread.append(content)
+        if target == targ and sender == sndr and receipt == 0:
+            unread.append(line) #List of messages that have not been read
 
-
-            # change the read receipt to true
-            receipt = 1
+            #change the lines to be true
+            li[3] = 1 # read receipt = true
+            line = ", ".join(li)
+            result += line + '\n'
+            f = open(GLOBAL_VAR, 'w')  # should be in 'wt or 'w' mode
+            f.write(result)
+            f.close()
 
     fp.close()
     return unread
