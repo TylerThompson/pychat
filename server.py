@@ -47,10 +47,10 @@ def helpMenu(new_user):
     new_user.conn.send(helpCmds.encode())
 
 def clientthread(new_user, addr):
+    print('calling client thread')
     ''' Sends a message to the client who'S user is conn '''
     try:
         new_user.conn.send("Welcome to this chat room!".encode())
-
         while True:
             try:
                 message = new_user.conn.recv(2048)
@@ -466,13 +466,16 @@ while True:
     which contains the IP address of the client that just 
     connected"""
     try:
+        print('about to accept')
         conn, addr = server.accept()
         # Create a new user
+        print('creating new user')
         new_user = User()
         new_user.conn = conn
+        print('ask the user for register or login')
         # Pass that user into loginOrRegister
         loginOrRegister(new_user)
-
+        print('send help menu')
         #send message menu
         helpMenu(conn)
 
