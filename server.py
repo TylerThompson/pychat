@@ -17,7 +17,7 @@ binds the server to an entered IP address and at the
 specified port number.
 The client must be aware of these parameters
 """
-server.bind(("", 8080))
+server.bind(("", 8888))
 
 """
 listens for 100 active connections. This number can be
