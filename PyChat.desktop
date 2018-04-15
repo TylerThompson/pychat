@@ -1,0 +1,6 @@
+Desktop Entry]
+Type=Application
+Terminal=false
+Name=PyChat
+Exec=test.py
+Icon=PyChat.png
