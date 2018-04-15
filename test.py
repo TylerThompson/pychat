@@ -6,15 +6,14 @@ import os
 class PyChatApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-
+        # Set the title of the app
         self.title = "PyChat"
         self.wm_title("PyChat")
-
+        # Change the icon
         imageIcon = '@pychat_2d5_icon.xbm'
         if os.name == 'nt':
             imageIcon = 'pychat_2d5_icon.ico'
         self.iconbitmap(imageIcon)
-
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible
         # will be raised above the others
@@ -22,7 +21,7 @@ class PyChatApp(tk.Tk):
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
-
+        # Set all frames
         self.frames = {}
         for F in (LoginPage, RegisterPage, ChatPage, ForgotPassPage):
             page_name = F.__name__
@@ -30,7 +29,6 @@ class PyChatApp(tk.Tk):
             self.frames[page_name] = frame
             # Stack the frames on top of each other
             frame.grid(row=0, column=0, sticky="nsew")
-
         # Show login first
         self.show_frame("LoginPage")
 
@@ -40,11 +38,12 @@ class PyChatApp(tk.Tk):
             frame.grid_remove()
         frame = self.frames[page_name]
         frame.grid()
-        #
+        # Call build
         method_to_call = getattr(self.frames[page_name], 'build')
         method_to_call()
 
 class ForgotPassPage(tk.Frame):
+    ''' Forgot password page'''
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
@@ -56,35 +55,34 @@ class ForgotPassPage(tk.Frame):
             widget.destroy()
 
         self.parent.grid(row=0, column=0)
-
+        # Set label of page
         forgotPassLabel = tk.Label(self, text='Forgot Password')
         forgotPassLabel.pack(side="top", fill="x", pady=(30, 10))
-
+        # Set email
         email = tk.Entry(self, width=20)
         email.insert(0, 'Email')
         email.focus_set()
         email.pack(side="top", fill="x", pady=(30, 10))
-
+        # Change Password
         password = tk.Entry(self, width=20, text='Password', show='*')
         password.insert(0, 'Password')
         password.pack(side="top", fill="x", pady=5)
-
+        # Confirm password
         password2 = tk.Entry(self, width=20, text='Password', show='*')
         password2.insert(0, 'Password')
         password2.pack(side="top", fill="x", pady=5)
-
-        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white',foreground='white')
+        # Change password button
+        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white')
         forgotPassBtn.pack(side="top", fill="x", pady=(40, 10))
         # button.bind('<Return>', self.get_login_event)
-
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x", pady=(5, 5))
         # button.bind('<Button-1>', self.get_register_event)
-
         registerBtn = tk.Button(self, text='Register', borderwidth=0, command=lambda: self.controller.show_frame("RegisterPage"))
         registerBtn.pack(side="top", fill="x", pady=(5, 10))
 
 class ChatPage(tk.Frame):
+    ''' Chat Page'''
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
@@ -96,26 +94,21 @@ class ChatPage(tk.Frame):
             widget.destroy()
 
         self.parent.grid(row=0, column=0)
-
         self.parent.rowconfigure(0, weight=1)
         self.parent.columnconfigure(0, weight=1)
-
         # List of messages
         frame00 = tk.Frame(self.controller)
         frame00.grid(column=0, row=0, rowspan=2, sticky="nsew")
-
         # List of Active users
         frame01 = tk.Frame(self.controller)
         frame01.grid(column=1, row=0, rowspan=3, sticky="nsew")
-
         # Message entry
         frame02 = tk.Frame(self.controller)
         frame02.grid(column=0, row=2, columnspan=1, sticky="nsew")
-
         # Buttons
         frame03 = tk.Frame(self.controller)
         frame03.grid(column=0, row=3, columnspan=2, sticky="nsew")
-
+        # Set the position of the windows
         self.controller.rowconfigure(0, weight=1)
         self.controller.rowconfigure(1, weight=1)
         self.controller.rowconfigure(2, weight=8)
@@ -147,6 +140,7 @@ class ChatPage(tk.Frame):
         self.send_button.pack(side=tk.RIGHT, fill=tk.BOTH, expand=tk.YES)
 
 class LoginPage(tk.Frame):
+    ''' Login Page '''
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
@@ -158,7 +152,6 @@ class LoginPage(tk.Frame):
             widget.destroy()
 
         self.parent.grid(row=0, column=0)
-
         load = Image.open('PyChat.png')
         render = ImageTk.PhotoImage(load)
         logo = tk.Label(self, image=render)
@@ -189,6 +182,7 @@ class LoginPage(tk.Frame):
         copy.pack(side="top", fill="x", pady=(100, 10))
 
 class RegisterPage(tk.Frame):
+    ''' Registration Page'''
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
