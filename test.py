@@ -86,7 +86,9 @@ class ForgotPassPage(tk.Frame):
         self.parent = parent
         self.controller = controller
         tk.Frame.__init__(self, self.parent)
-
+        self.email=None
+        self.password=None
+        self.password2=None
     def build(self):
         # Destroy previous versions of forgot password
         for widget in self.winfo_children():
@@ -112,12 +114,23 @@ class ForgotPassPage(tk.Frame):
         # Change password button
         forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white')
         forgotPassBtn.pack(side="top", fill="x", pady=(40, 10))
-        # button.bind('<Return>', self.get_login_event)
+        forgotPassBtn.bind('<Return>', self.forgot)
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x", pady=(5, 5))
         # button.bind('<Button-1>', self.get_register_event)
         registerBtn = tk.Button(self, text='Register', borderwidth=0, command=lambda: self.controller.show_frame("RegisterPage"))
         registerBtn.pack(side="top", fill="x", pady=(5, 10))
+
+    def forgot(self):
+        if self.password == self.password2:
+            self.sock.send(self.email + ":" + self.password.encode(ENCODING))
+            data = self.sock.recv(1024)
+            if data == "PASS_CHANGE_SUCCESS":
+                display_alert("Password has been changed!")
+            else:
+                display_alert("There was an error changing your password.")
+        else:
+            display_alert("Passwords did not match!")
 
 class ChatPage(tk.Frame):
     ''' Chat Page'''
@@ -216,6 +229,7 @@ class LoginPage(tk.Frame):
 
         forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0, command=lambda: self.controller.show_frame("ForgotPassPage"))
         forgotBtn.pack(side="top", fill="x")
+
 
         copy = tk.Label(self, text='PyChat © 2018', width=20)
         copy.pack(side="top", fill="x", pady=(100, 10))
