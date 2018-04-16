@@ -184,12 +184,18 @@ class ChatPage(tk.Frame):
         # Button widget for sending messages
         self.send_button = tk.Button(frame03, text='Send')
         #self.send_button.bind('<Button-1>', self.send_entry_event)
+        self.send_button.bind("<Return>", self.send_entry)
 
         # Positioning widgets in frame
         self.messages_list.pack(fill=tk.BOTH, expand=tk.YES)
         self.logins_list.pack(fill=tk.BOTH, expand=tk.YES)
         self.entry.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
         self.send_button.pack(side=tk.RIGHT, fill=tk.BOTH, expand=tk.YES)
+
+    def send_entry(self):
+        self.sock.send(self.entry.encode(ENCODING))
+        self.entry.delete(0, 'end')
+
 
 class LoginPage(tk.Frame):
     ''' Login Page '''
