@@ -470,8 +470,11 @@ while True:
         conn, addr = server.accept()
         # Create a new user
         print('creating new user')
+
         new_user = User()
         new_user.conn = conn
+        print(new_user.conn.recv(1024).decode('ascii'))
+
         print('ask the user for register or login')
         # Pass that user into loginOrRegister
         loginOrRegister(new_user)

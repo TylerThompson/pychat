@@ -214,11 +214,15 @@ class LoginPage(tk.Frame):
         registerBtn = tk.Button(self, text='Register', command=lambda: self.controller.show_frame("RegisterPage"))
         registerBtn.pack(side="top", fill="x")
 
+
         forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0, command=lambda: self.controller.show_frame("ForgotPassPage"))
         forgotBtn.pack(side="top", fill="x")
 
         copy = tk.Label(self, text='PyChat © 2018', width=20)
         copy.pack(side="top", fill="x", pady=(100, 10))
+
+
+
 
     def get_login_event(self):
         ''' Check login for correct info'''
@@ -238,6 +242,11 @@ class RegisterPage(tk.Frame):
         self.parent = parent
         self.controller = controller
         tk.Frame.__init__(self, self.parent)
+
+        self.name = None
+        self.username = None
+        self.email = None
+        self.password = None
 
     def build(self):
         # Destroy previous versions of register page
@@ -271,8 +280,14 @@ class RegisterPage(tk.Frame):
         password.insert(0, 'Password')
         password.pack(side="top", fill="x", pady=5)
 
+
+
         registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white')
         registerBtn.pack(side="top", fill="x")
+
+        registerBtn.bind("<Return>", self.get_register_event)
+
+
 
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x")
@@ -282,6 +297,23 @@ class RegisterPage(tk.Frame):
 
         copy = tk.Label(self, text='PyChat © 2018', width=20)
         copy.pack(side="top", fill="x", pady=(90, 10))
+
+    def get_register_event(self):
+
+        # Get variables
+        name = self.name
+        username = self.username
+        email = self.email
+        password = self.password
+        # Check file for both password and email
+        self.sock.send("hello world from register".encode(ENCODING))
+        print("hello")
+        # send error to user or to server
+        data = self.sock.recv(1024)
+        # Call chatPage layout if server accepts connection
+
+
+
 
 
 
