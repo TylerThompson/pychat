@@ -6,7 +6,7 @@ from gui import *
 
 ENCODING = 'utf-8'
 HOST = 'localhost'
-PORT = 8080
+PORT = 8888
 
 class Client(threading.Thread):
     def __init__(self, host, port):
