@@ -305,7 +305,6 @@ class RegisterPage(tk.Frame):
 
         registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white')
         registerBtn.pack(side="top", fill="x")
-
         registerBtn.bind("<Return>", self.get_register_event)
 
 
@@ -333,7 +332,9 @@ class RegisterPage(tk.Frame):
         data = self.sock.recv(1024)
         # Call chatPage layout if server accepts connection
 
-
+        if data == "success":
+            """If registration is a success go to login page, then log the person in"""
+            return 0
 
 
 

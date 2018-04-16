@@ -473,7 +473,13 @@ while True:
 
         new_user = User()
         new_user.conn = conn
+<<<<<<< HEAD
+
+
+        print('ask the user for register or login')
+=======
         print('ask the user for register or login or check for gui')
+>>>>>>> eb1faceec779383bc327a5b0eee3475a4c2fa499
         # Pass that user into loginOrRegister
         data = new_user.conn.recv(1024)
         if data == "GUI":
