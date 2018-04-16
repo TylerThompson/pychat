@@ -46,7 +46,7 @@ def helpMenu(new_user):
     helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
     new_user.conn.send(helpCmds.encode())
 
-def clientthread(new_user, addr):
+def clientthread(new_user, addr, usingGUI = False):
     print('calling client thread')
     ''' Sends a message to the client who'S user is conn '''
     try:
@@ -473,17 +473,14 @@ while True:
 
         new_user = User()
         new_user.conn = conn
-<<<<<<< HEAD
 
-
-        print('ask the user for register or login')
-=======
         print('ask the user for register or login or check for gui')
->>>>>>> eb1faceec779383bc327a5b0eee3475a4c2fa499
         # Pass that user into loginOrRegister
-        data = new_user.conn.recv(1024)
+        data = new_user.conn.recv(1024).decode()
+        print("data: " + data)
         if data == "GUI":
-            print(addr[0] + ' Connected')
+            print(addr[0] + ' Connected via GUI')
+            start_new_thread(clientthread, (new_user, addr, true))
         else:
             loginOrRegister(new_user)
             print('send help menu')

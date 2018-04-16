@@ -36,6 +36,9 @@ class PyChatApp(tk.Tk):
         if self.exit_event:
             exit()
 
+        # Let the Server know we are using a GUI
+        self.sock.send("GUI".encode(ENCODING))
+
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible
         # will be raised above the others
@@ -59,7 +62,6 @@ class PyChatApp(tk.Tk):
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((str(self.host), int(self.port)))
-            self.sock.send("GUI".encode(ENCODING))
         except ConnectionRefusedError:
             display_alert("Server is inactive, unable to connect")
             self.exit_event = True
