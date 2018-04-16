@@ -473,24 +473,25 @@ while True:
 
         new_user = User()
         new_user.conn = conn
-        print(new_user.conn.recv(1024).decode('ascii'))
-
-        print('ask the user for register or login')
+        print('ask the user for register or login or check for gui')
         # Pass that user into loginOrRegister
-        loginOrRegister(new_user)
-        print('send help menu')
-        #send message menu
-        helpMenu(conn)
+        data = new_user.conn.recv(1024)
+        if data == "GUI":
+            print(addr[0] + ' Connected')
+        else:
+            loginOrRegister(new_user)
+            print('send help menu')
+            #send message menu
+            helpMenu(conn)
+            """Maintains a list of clients for ease of broadcasting
+            a message to all available people in the chatroom"""
+            list_of_clients.append(conn)
 
-        """Maintains a list of clients for ease of broadcasting
-        a message to all available people in the chatroom"""
-        list_of_clients.append(conn)
+            # prints the address of the user that just connected
+            print(addr[0] + " connected")
 
-        # prints the address of the user that just connected
-        print(addr[0] + " connected")
-
-        # creates and individual thread for every user that connects
-        start_new_thread(clientthread, (new_user, addr))
+            # creates and individual thread for every user that connects
+            start_new_thread(clientthread, (new_user, addr))
     except:
         print("The client closed connection before it could be established")
 

@@ -59,6 +59,7 @@ class PyChatApp(tk.Tk):
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((str(self.host), int(self.port)))
+            self.sock.send("GUI".encode(ENCODING))
         except ConnectionRefusedError:
             display_alert("Server is inactive, unable to connect")
             self.exit_event = True
@@ -244,7 +245,7 @@ class LoginPage(tk.Frame):
         email = self.email
         password = self.password
         # Check file for both password and email
-        self.sock.send("hello world".encode(ENCODING))
+        self.sock.send("1".encode(ENCODING))
         # send error to user or to server
         data = self.sock.recv(1024)
         # Call chatPage layout if server accepts connection
