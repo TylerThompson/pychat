@@ -2,6 +2,7 @@
 import socket
 import select
 import sys
+import time
 from _thread import *
 
 """The first argument AF_INET is the address domain of the
@@ -28,10 +29,10 @@ server.listen(100)
 list_of_clients = []
 
 # Give each file a variable
-FRIENDSHIP = "friendship"
-PENDING = "pending"
-DM = "directMessage"
-REGISTER = "registered"
+FRIENDSHIP = "friendship.t"
+PENDING = "pending.t"
+DM = "directMessage.t"
+REGISTER = "registered.t"
 
 class User:
     username = ""
@@ -46,61 +47,73 @@ def helpMenu(new_user):
     helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
     new_user.conn.send(helpCmds.encode())
 
-def clientthread(new_user, addr):
+def clientthread(new_user, addr, usingGUI = False):
     print('calling client thread')
     ''' Sends a message to the client who'S user is conn '''
-    try:
-        new_user.conn.send("Welcome to this chat room!".encode())
-        while True:
-            try:
-                message = new_user.conn.recv(2048)
-                if message:
-                    # Process the message that the user sent for commands
-                    if message.contains(" "):
-                        msg = message.split(" ")
-                        if msg == "help" or msg == "-h":
-                            helpMenu(new_user)
-                            continue
-                        elif msg == "quit":
-                            quit()
-                            continue
-                        elif msg == "addfriend":
-                            if msg[1] == "":
-                                new_user.conn.send("You must use the friends username to add them")
-                            addFriend(new_user, msg[1])
-                            continue
-                        elif msg == "removefriend":
-                            if msg[1] == "":
-                                new_user.conn.send("You must use the friends username to remove them")
-                            removeFriend(new_user, msg[1])
-                            continue
-                        elif msg == "viewfriends":
-                            v = viewFriends(new_user)
-                            for x in v:
-                                new_user.conn.send(str(x).encode())
-                            continue
-                        elif msg == "direct":
-                            if msg[1] == "":
-                                new_user.conn.send("You must use the friends username to direct them")
-                                # Send friend a message that you want to direct them
-                                new_user.conn.send("You are now in direct mode with " + msg[1])
-                                # Send notification to friend
-                            continue
-                        elif msg == "broadcast":
-                            new_user.dm = ""
-                            new_user.conn.send("You are not in broadcast mode")
-                        else:
+    # Handle GUI commands different from terminal
+    if usingGUI:
+        # Use a splitting method when sending the data through
+        data = new_user.recv(1024).decode()
+        print(data)
+        # First param is what method we are going to do
+        method = data.split("|")[0]
+        print("method: " + method)
+
+    else:
+        try:
+            # Handle Terminal Commands
+            new_user.conn.send("Welcome to this chat room!".encode())
+            while True:
+                try:
+                    message = new_user.conn.recv(2048)
+                    if message:
+                        # Process the message that the user sent for commands
+                        if message.contains(" "):
+                            msg = message.split(" ")
+                            if msg == "help" or msg == "-h":
+                                helpMenu(new_user)
+                                continue
+                            elif msg == "quit":
+                                quit()
+                                continue
+                            elif msg == "addfriend":
+                                if msg[1] == "":
+                                    new_user.conn.send("You must use the friends username to add them")
+                                addFriend(new_user, msg[1])
+                                continue
+                            elif msg == "removefriend":
+                                if msg[1] == "":
+                                    new_user.conn.send("You must use the friends username to remove them")
+                                removeFriend(new_user, msg[1])
+                                continue
+                            elif msg == "viewfriends":
+                                v = viewFriends(new_user)
+                                for x in v:
+                                    new_user.conn.send(str(x).encode())
+                                    continue
+                            elif msg == "direct":
+                                if msg[1] == "":
+                                    new_user.conn.send("You must use the friends username to direct them")
+                                    # Send friend a message that you want to direct them
+                                    new_user.conn.send("You are now in direct mode with " + msg[1])
+                                    # Send notification to friend
+                                continue
+                            elif msg == "broadcast":
+                                new_user.dm = ""
+                                new_user.conn.send("You are not in broadcast mode")
+                            else:
+                                sendMessage(new_user, message)
                             sendMessage(new_user, message)
-                    sendMessage(new_user, message)
-                else:
-                    # Remove connection from pool
-                    remove(new_user)
-            except:
-                continue
-    except:
-        print("connection closed by client")
-        new_user.active = False
-        remove(new_user)
+                    else:
+                        # Remove connection from pool
+                        remove(new_user)
+                except:
+                    continue
+        except:
+            print("connection closed by client")
+            new_user.active = False
+            remove(new_user)
+
 
 def sendMessage(new_user, message):
     # Print message and user who sent it
@@ -416,8 +429,6 @@ def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
             f.write(line)
     f.close()
 
-
-
     """ 
     Unread messages, will receive DM.txt the sender and receiver, it will be called when the user logs on 
     a message box will pop up saying how many messages they have and from whom.
@@ -466,40 +477,46 @@ while True:
     which contains the IP address of the client that just 
     connected"""
     try:
+        time.sleep(5)
         print('about to accept')
         conn, addr = server.accept()
         # Create a new user
         print('creating new user')
+        getGUI = None
 
         new_user = User()
         new_user.conn = conn
-<<<<<<< HEAD
 
-
-        print('ask the user for register or login')
-=======
         print('ask the user for register or login or check for gui')
->>>>>>> eb1faceec779383bc327a5b0eee3475a4c2fa499
+
         # Pass that user into loginOrRegister
-        data = new_user.conn.recv(1024)
-        if data == "GUI":
-            print(addr[0] + ' Connected')
-        else:
-            loginOrRegister(new_user)
-            print('send help menu')
-            #send message menu
-            helpMenu(conn)
-            """Maintains a list of clients for ease of broadcasting
-            a message to all available people in the chatroom"""
-            list_of_clients.append(conn)
+        data = conn.recv(1024)
+        if data != "":
+            data = data.decode()
+            print("data: " + data)
+            if data.contains('|'):
+                getGUI = data.split("|")[0]
+            if getGUI == "GUI":
+                print(addr[0] + ' Connected via gui')
+                list_of_clients.append(conn)
+                start_new_thread(clientthread, (new_user, addr, True))
+            else:
+                print(addr[0] + 'connected via terminal')
+                loginOrRegister(new_user)
+                print('send help menu')
+                #send message menu
+                helpMenu(conn)
+                """Maintains a list of clients for ease of broadcasting
+                a message to all available people in the chatroom"""
+                list_of_clients.append(conn)
 
-            # prints the address of the user that just connected
-            print(addr[0] + " connected")
+                # prints the address of the user that just connected
+                print(addr[0] + " connected")
 
-            # creates and individual thread for every user that connects
-            start_new_thread(clientthread, (new_user, addr))
+                # creates and individual thread for every user that connects
+                start_new_thread(clientthread, (new_user, addr))
     except:
         print("The client closed connection before it could be established")
 
-new_user.conn.close()
+#new_user.conn.close()
 server.close()
