@@ -19,8 +19,8 @@ while True:
     try:
         # maintains a list of possible input streams
         sockets_list = [socket.socket(), server]
-
-        read_sockets, write_socket, error_socket = select.select(sockets_list, [], [])
+        print("hello")
+        read_sockets, write_socket, error_socket = select(sockets_list, [], [])
         time.sleep(5)
 
         for socks in read_sockets:
@@ -33,4 +33,4 @@ while True:
                 server.send(message.encode(ENCODING))
     except:
         print('It seems that the server has closed connection')
-        exit()
+
