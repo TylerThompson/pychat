@@ -14,21 +14,20 @@ a continuous flow."""
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+ENCODING = 'utf-8'
+
 """
 binds the server to an entered IP address and at the
 specified port number.
 The client must be aware of these parameters
 """
-server.bind(("", 8888))
+server.bind(("", 8080))
 
 """
 listens for 100 active connections. This number can be
 increased as per convenience.
 """
 server.listen(100)
-
-
-
 
 while True:
     """Accepts a connection request and stores two parameters, 
@@ -46,36 +45,39 @@ while True:
         new_user = User()
         new_user.conn = conn
 
-        print('ask the user for register or login or check for gui')
-
         # Pass that user into loginOrRegister
         data = conn.recv(1024)
         if data != "":
-            data = data.decode()
+            print('received something')
+            data = data.decode(ENCODING)
             print("data: " + data)
-            if data.contains('|'):
-                getGUI = data.split("|")[0]
-            if getGUI == "GUI":
+            if 'GUI' in data:
+                print('gui is in data')
+                if "|" in data:
+                    print('splitting data')
+                    getGUI = data.split('|')[0]
+                else:
+                    getGUI = data
                 print(addr[0] + ' Connected via gui')
-                list_of_clients.append(conn)
-                start_new_thread(clientthread, (new_user, addr, True))
-            else:
-                print(addr[0] + 'connected via terminal')
-                loginOrRegister(new_user)
-                print('send help menu')
-                #send message menu
-                helpMenu(conn)
-                """Maintains a list of clients for ease of broadcasting
-                a message to all available people in the chatroom"""
-                list_of_clients.append(conn)
+                new_user.conn.send(data)
+                print('sent info back to client')
+                #list_of_clients.append(conn)
+                #start_new_thread(clientthread, (new_user, addr, True))
+        else:
+            print(addr[0] + 'connected via terminal')
+            loginOrRegister(new_user)
+            print('send help menu')
+            #send message menu
+            helpMenu(conn)
+            """Maintains a list of clients for ease of broadcasting
+            a message to all available people in the chatroom"""
+            list_of_clients.append(conn)
 
-                # prints the address of the user that just connected
-                print(addr[0] + " connected")
+            # prints the address of the user that just connected
+            print(addr[0] + " connected")
 
-                # creates and individual thread for every user that connects
-                start_new_thread(clientthread, (new_user, addr))
+            # creates and individual thread for every user that connects
+            start_new_thread(clientthread, (new_user, addr))
     except:
-        print("The client closed connection before it could be established")
-
+        print("There was some kind of error that happened")
 #new_user.conn.close()
-server.close()
