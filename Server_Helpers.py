@@ -42,6 +42,10 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
         elif method == 'register':
             print('calling register')
             register(new_user, True)
+        elif method == "forgot":
+            print('forgot password')
+            forgot(new_user, True)
+        # TODO finish the messaging for GUI
 
         #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
         print('sent user a message that it was successful')
@@ -103,6 +107,7 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
 
 
 def sendMessage(new_user, message):
+    """ Send Message """
     # Print message and user who sent it
     print("<" + new_user.username + "> " + message)
     # Calls broadcast function to send message to all
@@ -323,6 +328,32 @@ def login(new_user, usingGUI=False):
                 new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     return True
 
+def forgot(new_user, usingGUI=False):
+    """ Forgot password """
+    if usingGUI:
+        data = new_user.conn.recv(1024).decode(ENCODING)
+        # GUI|METHOD|EMAIL|PASSWORD
+        email = data.split('|')[1]
+        password = data.split('|')[2]
+        print('Email: ' + email)
+        print('passing: ' + password)
+        userFound = search_file(REGISTER, email)
+        if userFound != "":
+            userFound = userFound[0]# Make sure its a string
+            # User found, lets change password (we should probably do this a different more secure way_
+            print(userFound)
+            # username + "|" + email + "|" + fullName + "|" + password
+            username = userFound.split('|')[0]
+            email = userFound.split('|')[1]
+            name = userFound.split('|')[2]
+            remove_item(REGISTER, userFound)
+            add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
+            return "SUCCESS_FORGOT_PASS"
+        else:
+            return "Could not change password at this time"
+    else:
+        # todo do the terminal version of this
+        return "Could not change password for terminal type"
 
 def register(new_user, usingGUI=False):
     """ Register a user"""
@@ -377,7 +408,7 @@ def register(new_user, usingGUI=False):
             new_user.conn.send("email in use, try again".encode())
             continue
         # If everything is okay, lets save everything and append to file
-        add_item(REGISTER, username + ";" + email + ";" + fullName + ";" + password)
+        add_item(REGISTER, username + "|" + email + "|" + fullName + "|" + password)
         new_user.conn.send("You are now registered, login now".encode())
         # Call login function
         login(new_user)
@@ -420,6 +451,13 @@ def search_file(GLOBAL_VAR, search):
     fp.close()
     return f
 
+def remove_item(GLOBAL_VAR, search):
+    """ Remove item from file"""
+    fp = open(GLOBAL_VAR, "w")
+    for line in fp.readlines():
+        if line != search:
+            fp.write(line)
+    fp.close()
 
 def add_item(GLOBAL_VAR, message):
     """This function will add a message that the user enters, into the DM.txt file"""
