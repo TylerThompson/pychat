@@ -27,9 +27,6 @@ increased as per convenience.
 """
 server.listen(100)
 
-
-
-
 while True:
     """Accepts a connection request and stores two parameters, 
     conn which is a socket object for that user, and addr 
@@ -51,10 +48,12 @@ while True:
         # Pass that user into loginOrRegister
         data = conn.recv(1024)
         if data != "":
-            data = data.decode()
+            data = data.decode('ascii')
             print("data: " + data)
-            if data.contains('|'):
+            
+            if "|" in data:
                 getGUI = data.split("|")[0]
+
             if getGUI == "GUI":
                 print(addr[0] + ' Connected via gui')
                 list_of_clients.append(conn)
@@ -63,7 +62,7 @@ while True:
                 print(addr[0] + 'connected via terminal')
                 loginOrRegister(new_user)
                 print('send help menu')
-                #send message menu
+                # send message menu
                 helpMenu(conn)
                 """Maintains a list of clients for ease of broadcasting
                 a message to all available people in the chatroom"""
@@ -77,5 +76,5 @@ while True:
     except:
         print("The client closed connection before it could be established")
 
-#new_user.conn.close()
+new_user.conn.close()
 server.close()
