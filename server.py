@@ -59,10 +59,11 @@ while True:
                 else:
                     getGUI = data
                 print(addr[0] + ' Connected via gui')
-                new_user.conn.send(data)
+                new_user.conn.send(data.encode())
                 print('sent info back to client')
-                #list_of_clients.append(conn)
-                #start_new_thread(clientthread, (new_user, addr, True))
+                #print("Data "+data)
+                list_of_clients.append(conn)
+                start_new_thread(clientthread, (new_user, addr, True))
         else:
             print(addr[0] + 'connected via terminal')
             loginOrRegister(new_user)

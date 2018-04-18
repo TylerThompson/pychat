@@ -24,7 +24,7 @@ def clientthread(new_user, addr, usingGUI=False):
     # Handle GUI commands different from terminal
     if usingGUI:
         # Use a splitting method when sending the data through
-        data = new_user.recv(1024).decode()
+        data = new_user.conn.recv(1024).decode('ascii')
         print(data)
         # First param is what method we are going to do
         method = data.split("|")[0]
