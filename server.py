@@ -59,7 +59,7 @@ while True:
                 else:
                     getGUI = data
                 print(addr[0] + ' Connected via gui')
-                new_user.conn.send(data)
+                new_user.conn.send(data.encode(ENCODING))
                 print('sent info back to client')
                 #list_of_clients.append(conn)
                 #start_new_thread(clientthread, (new_user, addr, True))
