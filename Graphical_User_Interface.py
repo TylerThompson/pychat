@@ -34,7 +34,7 @@ class PyChatApp(tk.Tk):
         if self.exit_event:
             exit()
         # Send data to server to let it know we are doing a GUI
-        self.sock.send("GUI".encode(ENCODING))
+        #self.sock.send("GUI".encode(ENCODING))
 
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible

@@ -14,8 +14,6 @@ a continuous flow."""
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-ENCODING = 'utf-8'
-
 """
 binds the server to an entered IP address and at the
 specified port number.
@@ -47,21 +45,14 @@ while True:
 
         # Pass that user into loginOrRegister
         data = conn.recv(1024)
-        if data != "":
+        if data != "" and 'GUI' in data.decode(ENCODING):
             print('received something')
             data = data.decode(ENCODING)
             print("data: " + data)
             if 'GUI' in data:
-                print('gui is in data')
-                if "|" in data:
-                    print('splitting data')
-                    getGUI = data.split('|')[0]
-                else:
-                    getGUI = data
                 print(addr[0] + ' Connected via gui')
-                new_user.conn.send(data.encode(ENCODING))
-                print('sent info back to client')
-                #print("Data "+data)
+                #new_user.conn.send(data.encode(ENCODING))
+                #print('sent info back to client')
                 list_of_clients.append(conn)
                 start_new_thread(clientthread, (new_user, addr, True))
         else:
