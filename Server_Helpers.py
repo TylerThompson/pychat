@@ -6,10 +6,13 @@ REGISTER = "registered.t"
 
 list_of_clients = []
 
+ENCODING = 'utf-8'
+
 class User:
     username = None
     fullname = None
     email = None
+    password = None
     conn = None
     active = False
     dm = None  # Person who we are currently dming (if no one, then we are broadcasting)
@@ -24,11 +27,22 @@ def clientthread(new_user, addr, usingGUI=False):
     # Handle GUI commands different from terminal
     if usingGUI:
         # Use a splitting method when sending the data through
-        data = new_user.recv(1024).decode()
+        data = new_user.conn.recv(1024).decode()
         print(data)
         # First param is what method we are going to do
         method = data.split("|")[0]
         print("method: " + method)
+
+        allData = data.split('|')
+        method = allData[1]
+
+        if method == 'login':
+            print('logging you in')
+            login(new_user, True)
+
+
+        #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
+        print('sent user a message that it was successful')
     else:
         try:
             # Handle Terminal Commands
@@ -253,18 +267,22 @@ def quit():
     return "quit"
 
 
-def login(new_user):
+def login(new_user, usingGUI=False):
     """Login allows user to login and start to use the functions of mmessagingand friendship manipulation"""
     tryAgain = True
     while tryAgain:
         fullName = ""
         email = ""
         # Get user input
-        new_user.conn.send("Please enter username".encode())
-        username = new_user.conn.recv(1024).decode()
-        new_user.conn.send("Please enter password".encode())
-        password = new_user.conn.recv(1024).decode()
-        # Check the registration file
+        if usingGUI:
+            username = new_user.email
+            password = new_user.password
+        else:
+            new_user.conn.send("Please enter username".encode())
+            username = new_user.conn.recv(1024).decode()
+            new_user.conn.send("Please enter password".encode())
+            password = new_user.conn.recv(1024).decode()
+            # Check the registration file
         try:
             f = open(REGISTER, 'r')
         except:
@@ -283,16 +301,23 @@ def login(new_user):
         # Tell the user to keep logging in
         if exists:
             tryAgain = False
-            new_user.conn.send("Login successful".encode())
+            if usingGUI:
+                # Create user object
+                new_user = User()
+                new_user.username = username
+                new_user.fullname = fullName
+                new_user.email = email
+                new_user.active = True
+
+                new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
+            else:
+                new_user.conn.send("Login successful".encode())
         else:
-            tryAgain = True
-            new_user.conn.send("Login information incorrect, please try again".encode())
-    # Create user object
-    new_user = User()
-    new_user.username = username
-    new_user.fullname = fullName
-    new_user.email = email
-    new_user.active = True
+            if usingGUI:
+                new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
+            else:
+                tryAgain = True
+                new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     return True
 
 
