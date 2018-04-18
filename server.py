@@ -37,7 +37,6 @@ while True:
         print('about to accept')
         conn, addr = server.accept()
         # Create a new user
-        print('creating new user')
         getGUI = None
 
         new_user = User()
@@ -46,15 +45,11 @@ while True:
         # Pass that user into loginOrRegister
         data = conn.recv(1024)
         if data != "" and 'GUI' in data.decode(ENCODING):
-            print('received something')
             data = data.decode(ENCODING)
-            print("data: " + data)
             if 'GUI' in data:
                 print(addr[0] + ' Connected via gui')
-                #new_user.conn.send(data.encode(ENCODING))
-                #print('sent info back to client')
                 list_of_clients.append(conn)
-                start_new_thread(clientthread, (new_user, addr, True))
+                start_new_thread(clientthread, (new_user, addr, True, data))
         else:
             print(addr[0] + 'connected via terminal')
             loginOrRegister(new_user)

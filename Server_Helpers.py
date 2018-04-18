@@ -22,28 +22,31 @@ def helpMenu(new_user):
     helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
     new_user.conn.send(helpCmds.encode())
 
-def clientthread(new_user, addr, usingGUI=False):
+def clientthread(new_user, addr, usingGUI=False, data=None):
     """ Sends a message to the client who'S user is conn """
     # Handle GUI commands different from terminal
     if usingGUI:
         # Use a splitting method when sending the data through
-        data = new_user.conn.recv(1024).decode()
-        print(data)
         # First param is what method we are going to do
         method = data.split("|")[0]
         print("method: " + method)
 
         allData = data.split('|')
+        print('split this')
         method = allData[1]
+        print('method: ' + method)
 
         if method == 'login':
             print('logging you in')
             login(new_user, True)
-
+        elif method == 'register':
+            print('calling register')
+            register(new_user, True)
 
         #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
         print('sent user a message that it was successful')
     else:
+        print('in terminal?')
         try:
             # Handle Terminal Commands
             new_user.conn.send("Welcome to this chat room!".encode())
@@ -321,7 +324,7 @@ def login(new_user, usingGUI=False):
     return True
 
 
-def register(new_user):
+def register(new_user, usingGUI=False):
     """ Register a user"""
     tryAgain = True
     while tryAgain:
