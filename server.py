@@ -36,6 +36,7 @@ while True:
         time.sleep(5)
         print('about to accept')
         conn, addr = server.accept()
+        print('accepted something')
         # Create a new user
         getGUI = None
 
@@ -44,7 +45,9 @@ while True:
 
         # Pass that user into loginOrRegister
         data = conn.recv(1024)
+        print('received data')
         if data != "" and 'GUI' in data.decode(ENCODING):
+            print('in gui')
             data = data.decode(ENCODING)
             if 'GUI' in data:
                 print(addr[0] + ' Connected via gui')

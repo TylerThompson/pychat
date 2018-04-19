@@ -24,6 +24,7 @@ def helpMenu(new_user):
 
 def clientthread(new_user, addr, usingGUI=False, data=None):
     """ Sends a message to the client who'S user is conn """
+    print('called client thread')
     # Handle GUI commands different from terminal
     if usingGUI:
         # Use a splitting method when sending the data through
@@ -96,14 +97,15 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
                                 sendMessage(new_user, message)
                             sendMessage(new_user, message)
                     else:
+                        print('removed from pool?')
                         # Remove connection from pool
-                        remove(new_user)
+                        # remove(new_user)
                 except:
                     continue
         except:
             print("connection closed by client")
             new_user.active = False
-            remove(new_user)
+            #remove(new_user)
 
 
 def sendMessage(new_user, message):
@@ -386,11 +388,12 @@ def forgot(new_user, usingGUI=False, data=None):
 
 def checkUsername(username):
     """ Check if we can use a username"""
-    if len(username) > 15 or '.' in username or ';' in username or ' ' in username:
+    if len(username) > 20 or '.' in username or ';' in username or ' ' in username:
         return False
     else:
         # Check file
         infile = search_file(REGISTER, username)
+        print('check: ' + str(infile))
         if infile:
             return False
         else:
@@ -438,7 +441,7 @@ def register(new_user, usingGUI=False, data=None):
         # Allow registration
         # If everything is okay, lets save everything and append to file
         add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
-        new_user.conn.send("You are now registered, login now".encode(ENCODING))
+        new_user.conn.send("REGISTER_SUCCESS".encode(ENCODING))
         return True
 
     else:
@@ -526,7 +529,10 @@ def search_file(GLOBAL_VAR, search):
     """This function searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that
     reads all the lines and within doing that it uses the .split() function that allows it to read between the determinators"""
     f = []
-    fp = open(GLOBAL_VAR, "r")
+    try:
+        fp = open(GLOBAL_VAR, 'r')
+    except:
+        return []
     for line in fp.readlines():
         li = line.split(';')
         for x in li:

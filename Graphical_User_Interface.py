@@ -82,7 +82,7 @@ class PyChatApp(tk.Tk):
 
 def display_alert(message):
     """Display alert box"""
-    messagebox.showinfo('Error', message)
+    messagebox.showinfo('Warning', message)
 
 class ForgotPassPage(tk.Frame):
     """ Forgot password page"""
@@ -291,7 +291,7 @@ class LoginPage(tk.Frame):
         dataToSend = "GUI|login|" + email + "|" + password
         self.controller.sock.send(dataToSend.encode(ENCODING))
         # send error to user or to server
-        data = self.controller.sock.recv(1024).decode()
+        data = self.controller.sock.recv(1024).decode(ENCODING)
         print('data: ' + data)
         # Call chatPage layout if server accepts connection
         if data == "LOGIN_SUCCESS":
