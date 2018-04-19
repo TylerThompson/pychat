@@ -34,7 +34,7 @@ class PyChatApp(tk.Tk):
         if self.exit_event:
             exit()
         # Send data to server to let it know we are doing a GUI
-        self.sock.send("GUI".encode(ENCODING))
+        #self.sock.send("GUI".encode(ENCODING))
 
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible
@@ -105,20 +105,20 @@ class ForgotPassPage(tk.Frame):
         forgotPassLabel = tk.Label(self, text='Forgot Password')
         forgotPassLabel.pack(side="top", fill="x", pady=(30, 10))
         # Set email
-        email = tk.Entry(self, width=20)
-        email.insert(0, 'Email')
-        email.focus_set()
-        email.pack(side="top", fill="x", pady=(30, 10))
+        self.email = tk.Entry(self, width=20)
+        self.email.insert(0, 'Email')
+        self.email.focus_set()
+        self.email.pack(side="top", fill="x", pady=(30, 10))
         # Change Password
-        password = tk.Entry(self, width=20, text='Password', show='*')
-        password.insert(0, 'Password')
-        password.pack(side="top", fill="x", pady=5)
+        self.password = tk.Entry(self, width=20, text='Password', show='*')
+        self.password.insert(0, 'Password')
+        self.password.pack(side="top", fill="x", pady=5)
         # Confirm password
-        password2 = tk.Entry(self, width=20, text='Password', show='*')
-        password2.insert(0, 'Password')
-        password2.pack(side="top", fill="x", pady=5)
+        self.password2 = tk.Entry(self, width=20, text='Password', show='*')
+        self.password2.insert(0, 'Password')
+        self.password2.pack(side="top", fill="x", pady=5)
         # Change password button
-        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white')
+        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.forgot)
         forgotPassBtn.pack(side="top", fill="x", pady=(40, 10))
         forgotPassBtn.bind('<Return>', self.forgot)
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
@@ -129,8 +129,11 @@ class ForgotPassPage(tk.Frame):
 
     def forgot(self):
         """ Forgot password """
-        if self.password == self.password2:
-            self.controller.sock.send("GUI|forgot|" + self.email + "|" + self.password.encode(ENCODING))
+        email = self.password.get()
+        password = self.password.get()
+        password2 = self.password2.get()
+        if password == password2:
+            self.controller.sock.send("GUI|forgot|" + email + "|" + password.encode(ENCODING))
             data = self.controller.sock.recv(1024).decode()
             if data == "PASS_CHANGE_SUCCESS":
                 display_alert("Password has been changed!")
@@ -362,15 +365,20 @@ class RegisterPage(tk.Frame):
         email = self.email.get()
         password = self.password.get()
         # Check file for both password and email
+<<<<<<< HEAD
         dataToSend = "GUI|register|" + name + "|" + username + "|" + email + "|" + password
 
         self.controller.sock.send(dataToSend.encode(ENCODING))
+=======
+        registerSend = "GUI|register|" + name + "|" + username + "|" + email + "|" + password
+        self.controller.sock.send(registerSend.encode(ENCODING))
+>>>>>>> 787a5f5a40c86213f159f7559f81af6984cda8cf
         # send error to user or to server
         data = self.controller.sock.recv(1024)
         # Call chatPage layout if server accepts connection
         if data == "REGISTER_SUCCESS":
             """If registration is a success go to login page, then log the person in"""
-            display_alert("Successfully registered, taking you to login page")
+            display_alert("Successfully registered, Please click login")
             self.controller.show_frame("LoginPage")
         else:
             display_alert(data)

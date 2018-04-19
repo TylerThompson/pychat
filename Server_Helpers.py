@@ -6,6 +6,8 @@ REGISTER = "registered.t"
 
 list_of_clients = []
 
+ENCODING = 'utf-8'
+
 class User:
     username = None
     fullname = None
@@ -18,33 +20,53 @@ class User:
 def helpMenu(new_user):
     """ Display the help menu if a user gets stuck """
     helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
-    new_user.conn.send(helpCmds.encode())
+    new_user.conn.send(helpCmds.encode(ENCODING))
 
-def clientthread(new_user, addr, usingGUI=False):
+def clientthread(new_user, addr, usingGUI=False, data=None):
     """ Sends a message to the client who'S user is conn """
     # Handle GUI commands different from terminal
     if usingGUI:
         # Use a splitting method when sending the data through
-        data = new_user.conn.recv(1024).decode('ascii')
-        print(data)
         # First param is what method we are going to do
         method = data.split("|")[0]
         print("method: " + method)
 
+<<<<<<< HEAD
         if data.split("|")[1] == "register":
             register(new_user)
         else:
             print("not register")
+=======
+        allData = data.split('|')
+        print('split this')
+        method = allData[1]
+        print('method: ' + method)
+
+        if method == 'login':
+            print('logging you in')
+            login(new_user, True, data)
+        elif method == 'register':
+            print('calling register')
+            register(new_user, True, data)
+        elif method == "forgot":
+            print('forgot password')
+            forgot(new_user, True, data)
+        # TODO finish the messaging for GUI
+
+        #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
+        print('sent user a message that it was successful')
+>>>>>>> 787a5f5a40c86213f159f7559f81af6984cda8cf
     else:
+        print('in terminal?')
         try:
             # Handle Terminal Commands
-            new_user.conn.send("Welcome to this chat room!".encode())
+            new_user.conn.send("Welcome to this chat room!".encode(ENCODING))
             while True:
                 try:
                     message = new_user.conn.recv(2048)
                     if message:
                         # Process the message that the user sent for commands
-                        if message.contains(" "):
+                        if " " in message:
                             msg = message.split(" ")
                             if msg == "help" or msg == "-h":
                                 helpMenu(new_user)
@@ -65,7 +87,7 @@ def clientthread(new_user, addr, usingGUI=False):
                             elif msg == "viewfriends":
                                 v = viewFriends(new_user)
                                 for x in v:
-                                    new_user.conn.send(str(x).encode())
+                                    new_user.conn.send(str(x).encode(ENCODING))
                                     continue
                             elif msg == "direct":
                                 if msg[1] == "":
@@ -92,6 +114,7 @@ def clientthread(new_user, addr, usingGUI=False):
 
 
 def sendMessage(new_user, message):
+    """ Send Message """
     # Print message and user who sent it
     print("<" + new_user.username + "> " + message)
     # Calls broadcast function to send message to all
@@ -108,7 +131,7 @@ def broadcast(message, new_user):
     for clients in list_of_clients:
         if clients != new_user.conn:
             try:
-                clients.send(message.encode())
+                clients.send(message.encode(ENCODING))
             except:
                 clients.close()
                 # if the link is broken, we remove the client
@@ -123,7 +146,7 @@ def direct(message, new_user):
             try:
                 # Make sure we are only messaging the client/friend
                 if clients.username == new_user.dm and clients.username != new_user.username:
-                    clients.send(message.encode())
+                    clients.send(message.encode(ENCODING))
             except:
                 clients.conn.close()
                 remove(clients)
@@ -166,7 +189,7 @@ def addFriend(new_user, friendReq):
     # check if the users are already friends
     viewF = viewFriends(new_user)
     for line in viewF:
-        if line.contains(friendReq):
+        if friendReq in line:
             new_user.conn.send("You are already friends")
             return True
     # if request hasnt been made or the users are not friends add a request to pending.txt
@@ -179,7 +202,7 @@ def addFriend(new_user, friendReq):
             if clients != friendReq:
                 try:
                     clients.send(
-                        new_user.username + " sent you a friend request: type (approve/deny " + new_user.username + ")".encode())
+                        new_user.username + " sent you a friend request: type (approve/deny " + new_user.username + ")".encode(ENCODING))
                 except:
                     new_user.conn.send("There was an error sending your friend request")
                     return False
@@ -190,7 +213,7 @@ def removeFriend(new_user, friend):
     """ Remove a person from pending or friendships"""
     remove_item(FRIENDSHIP, new_user.username, friend)
     remove_item(PENDING, new_user.username, friend)
-    new_user.conn.send("You have removed " + friend.encode())
+    new_user.conn.send("You have removed " + friend.encode(ENCODING))
     return True
 
 def viewFriends(user):
@@ -259,18 +282,22 @@ def quit():
     return "quit"
 
 
-def login(new_user):
+def login(new_user, usingGUI=False, data=None):
     """Login allows user to login and start to use the functions of mmessagingand friendship manipulation"""
     tryAgain = True
     while tryAgain:
         fullName = ""
         email = ""
         # Get user input
-        new_user.conn.send("Please enter username".encode())
-        username = new_user.conn.recv(1024).decode()
-        new_user.conn.send("Please enter password".encode())
-        password = new_user.conn.recv(1024).decode()
-        # Check the registration file
+        if usingGUI:
+            username = data.split('|')[1]
+            password = data.split('|')[2]
+        else:
+            new_user.conn.send("Please enter username".encode(ENCODING))
+            username = new_user.conn.recv(1024).decode()
+            new_user.conn.send("Please enter password".encode(ENCODING))
+            password = new_user.conn.recv(1024).decode()
+            # Check the registration file
         try:
             f = open(REGISTER, 'r')
         except:
@@ -289,18 +316,26 @@ def login(new_user):
         # Tell the user to keep logging in
         if exists:
             tryAgain = False
-            new_user.conn.send("Login successful".encode())
+            if usingGUI:
+                # Create user object
+                new_user = User()
+                new_user.username = username
+                new_user.fullname = fullName
+                new_user.email = email
+                new_user.active = True
+
+                new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
+            else:
+                new_user.conn.send("Login successful".encode(ENCODING))
         else:
-            tryAgain = True
-            new_user.conn.send("Login information incorrect, please try again".encode())
-    # Create user object
-    new_user = User()
-    new_user.username = username
-    new_user.fullname = fullName
-    new_user.email = email
-    new_user.active = True
+            if usingGUI:
+                new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
+            else:
+                tryAgain = True
+                new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     return True
 
+<<<<<<< HEAD
 
 def register(new_user):
     """ Register a user"""
@@ -326,48 +361,182 @@ def register(new_user):
             email = new_user.conn.recv(1024).decode()
             if email.contains('@') and email.contains('.'):
                 emailTryAgain = False
+=======
+def forgot(new_user, usingGUI=False, data=None):
+    """ Forgot password """
+    if usingGUI:
+        # GUI|METHOD|EMAIL|PASSWORD
+        email = data.split('|')[1]
+        password = data.split('|')[2]
+        print('Email: ' + email)
+        print('passing: ' + password)
+        userFound = search_file(REGISTER, email)
+        if userFound != "":
+            userFound = userFound[0]# Make sure its a string
+            # User found, lets change password (we should probably do this a different more secure way_
+            print(userFound)
+            # username + "|" + email + "|" + fullName + "|" + password
+            username = userFound.split('|')[0]
+            email = userFound.split('|')[1]
+            name = userFound.split('|')[2]
+            remove_item(REGISTER, userFound)
+            add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
+            return "SUCCESS_FORGOT_PASS"
+        else:
+            return "Could not change password at this time"
+    else:
+        retry = True
+        while retry:
+            new_user.conn.send("Please enter your email address".encode(ENCODING))
+            email = new_user.conn.recv(1024).decode(ENCODING)
+            new_user.conn.send("Please enter a password".encode(ENCODING))
+            password = new_user.conn.recv(1024).decode(ENCODING)
+            new_user.conn.send("Re-enter your password again".encode(ENCODING))
+            confirm = new_user.conn.recv(1024).decode(ENCODING)
+            if password != confirm:
+                new_user.conn.send("Passwords do not match, please try again".encode(ENCODING))
+                retry = True
+                continue
+            if password == confirm:
+                retry = False
+            # Find user
+            userFound = search_file(REGISTER, email)
+            if userFound != "":
+                userFound = userFound[0]  # Make sure its a string
+                # User found, lets change password (we should probably do this a different more secure way_
+                print(userFound)
+                # username + "|" + email + "|" + fullName + "|" + password
+                username = userFound.split('|')[0]
+                email = userFound.split('|')[1]
+                name = userFound.split('|')[2]
+                remove_item(REGISTER, userFound)
+                add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
+                retry = False
+                new_user.conn.send("Password has been changed successfully".encode(ENCODING))
+>>>>>>> 787a5f5a40c86213f159f7559f81af6984cda8cf
             else:
-                new_user.conn.send('email is not valid, try again'.encode())
+                new_user.conn.send("Email is not associated with account".encode(ENCODING))
+                retry = True
 
-        new_user.conn.send("What is your full name?".encode())
-        fullName = new_user.conn.recv(1024).decode()
 
-        passwordTryAgain = True
-        while passwordTryAgain:
-            new_user.conn.send("Please enter a password".encode())
-            password = new_user.conn.recv(1024).decode()
-            new_user.conn.send("Please enter a password again".encode())
-            password2 = new_user.conn.recv(1024).decode()
-            if (len(password > 6) and password == password2):
-                passwordTryAgain = False
-            if (len(password) < 6):
-                new_user.conn.send('password needs to be greater than 6 characters')
+def checkUsername(username):
+    """ Check if we can use a username"""
+    if len(username) > 15 or '.' in username or ';' in username or ' ' in username:
+        return False
+    else:
+        # Check file
+        infile = search_file(REGISTER, username)
+        if infile:
+            return False
+        else:
+            # Username is not in use
+            return True
 
-        # Check data to make sure that it is not already in user
-        userInUse = False
-        # {username, email, fullname, password}
-        userSearch = search_file(REGISTER, username)
-        if userSearch != []:
-            userInUse = True
-            new_user.conn.send("username in use, try again".encode())
-            continue
-        # Check if user email is already in use
-        userEmailSearch = search_file(REGISTER, email)
-        if userEmailSearch != []:
-            userInUse = True
-            new_user.conn.send("email in use, try again".encode())
-            continue
+def checkEmail(email):
+    """ Check if email is in use or valid"""
+    if '@' in email and '.' in email:
+        return False
+    else:
+        # Check file
+        infile = search_file(REGISTER, email)
+        if infile:
+            return False
+        else:
+            # Email is not in use
+            return True
+
+
+def register(new_user, usingGUI=False, data=None):
+    """ Register a user"""
+
+    if usingGUI:
+        # Get the user info from stream
+        print(data)
+        name = data.split('|')[0]
+        username = data.split('|')[1]
+        email = data.split('|')[2]
+        password = data.split('|')[3]
+
+        # Check the username
+        check = checkUsername(username)
+        if not check:
+            new_user.conn.send("Username cannot be used (a-z0-9)".encode(ENCODING))
+            return False
+        # Check if email is in use
+        check2 = checkEmail(email)
+        if not check2:
+            new_user.conn.send("Email is in use or not valid".encode(ENCODING))
+            return False
+        # Check password
+        if (len(password) < 6):
+            new_user.conn.send('password needs to be greater than 6 characters'.encode(ENCODING))
+        # Allow registration
         # If everything is okay, lets save everything and append to file
-        add_item(REGISTER, username + ";" + email + ";" + fullName + ";" + password)
-        new_user.conn.send("You are now registered, login now".encode())
-        # Call login function
-        login(new_user)
+        add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
+        new_user.conn.send("You are now registered, login now".encode(ENCODING))
         return True
+
+    else:
+        tryAgain = True
+        while tryAgain:
+            # Sign up here
+            usernameTryAagain = True
+            while usernameTryAagain:
+                new_user.conn.send("Please enter a username: ".encode(ENCODING))
+                username = new_user.conn.recv(1024).decode()
+                if len(username) > 5 and not '.' in username and not ';' in username and not ' ' in username:
+                    usernameTryAagain = False
+                else:
+                    new_user.conn.send('username cannot contain  (.; ) and length must be greater than 5'.encode(ENCODING))
+
+            emailTryAgain = True
+            while emailTryAgain:
+                new_user.conn.send("Please enter a email:".encode(ENCODING))
+                email = new_user.conn.recv(1024).decode()
+                if '@' in email and '.' in email:
+                    emailTryAgain = False
+                else:
+                    new_user.conn.send('email is not valid, try again'.encode(ENCODING))
+
+            new_user.conn.send("What is your full name?".encode(ENCODING))
+            fullName = new_user.conn.recv(1024).decode()
+
+            passwordTryAgain = True
+            while passwordTryAgain:
+                new_user.conn.send("Please enter a password".encode(ENCODING))
+                password = new_user.conn.recv(1024).decode()
+                new_user.conn.send("Please enter a password again".encode(ENCODING))
+                password2 = new_user.conn.recv(1024).decode()
+                if (len(password > 6) and password == password2):
+                    passwordTryAgain = False
+                if (len(password) < 6):
+                    new_user.conn.send('password needs to be greater than 6 characters')
+
+            # Check data to make sure that it is not already in user
+            userInUse = False
+            # {username, email, fullname, password}
+            userSearch = search_file(REGISTER, username)
+            if userSearch != []:
+                userInUse = True
+                new_user.conn.send("username in use, try again".encode(ENCODING))
+                continue
+            # Check if user email is already in use
+            userEmailSearch = search_file(REGISTER, email)
+            if userEmailSearch != []:
+                userInUse = True
+                new_user.conn.send("email in use, try again".encode(ENCODING))
+                continue
+            # If everything is okay, lets save everything and append to file
+            add_item(REGISTER, username + "|" + email + "|" + fullName + "|" + password)
+            new_user.conn.send("You are now registered, login now".encode(ENCODING))
+            # Call login function
+            login(new_user)
+            return True
 
 
 def loginOrRegister(new_user):
     """ Ask the user if they want to login or register"""
-    new_user.conn.send("Would you like to login or register? (0 = Login, 1= Register)".encode())
+    new_user.conn.send("Would you like to login or register? (0 = Login, 1= Register)".encode(ENCODING))
     choice = eval(new_user.conn.recv(1024))
     if choice is 1:
         register(new_user)
@@ -396,11 +565,18 @@ def search_file(GLOBAL_VAR, search):
     for line in fp.readlines():
         li = line.split(';')
         for x in li:
-            if x.contains(search):
+            if search in x:
                 f.append(li)
     fp.close()
     return f
 
+def remove_item(GLOBAL_VAR, search):
+    """ Remove item from file"""
+    fp = open(GLOBAL_VAR, "w")
+    for line in fp.readlines():
+        if line != search:
+            fp.write(line)
+    fp.close()
 
 def add_item(GLOBAL_VAR, message):
     """This function will add a message that the user enters, into the DM.txt file"""
@@ -416,7 +592,7 @@ def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
     f.close()
     f = open(GLOBAL_VAR, 'w')
     for line in lines:
-        if not line.contains(personBeingRemoved) and not line.contains(personRemoving):
+        if not personBeingRemoved in line and not personRemoving in line:
             # Lets remove the person from the line by not adding them
             f.write(line)
     f.close()
