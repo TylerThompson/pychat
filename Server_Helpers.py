@@ -31,12 +31,6 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
         method = data.split("|")[0]
         print("method: " + method)
 
-<<<<<<< HEAD
-        if data.split("|")[1] == "register":
-            register(new_user)
-        else:
-            print("not register")
-=======
         allData = data.split('|')
         print('split this')
         method = allData[1]
@@ -55,7 +49,6 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
 
         #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
         print('sent user a message that it was successful')
->>>>>>> 787a5f5a40c86213f159f7559f81af6984cda8cf
     else:
         print('in terminal?')
         try:
@@ -335,33 +328,6 @@ def login(new_user, usingGUI=False, data=None):
                 new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     return True
 
-<<<<<<< HEAD
-
-def register(new_user):
-    """ Register a user"""
-    username = new_user.username
-    print("Username "+username)
-   # add_item(REGISTER, username + ";" + email + ";" + fullName + ";" + password)
-    tryAgain = True
-    while tryAgain:
-        # Sign up here
-        usernameTryAagain = True
-        while usernameTryAagain:
-            new_user.conn.send("Please enter a username: ".encode())
-            username = new_user.conn.recv(1024).decode()
-            if len(username) > 5 and not username.contains('.') and not username.contains(
-                    ';') and not username.contains(' '):
-                usernameTryAagain = False
-            else:
-                new_user.conn.send('username cannot contain  (.; ) and length must be greater than 5'.encode())
-
-        emailTryAgain = True
-        while emailTryAgain:
-            new_user.conn.send("Please enter a email:".encode())
-            email = new_user.conn.recv(1024).decode()
-            if email.contains('@') and email.contains('.'):
-                emailTryAgain = False
-=======
 def forgot(new_user, usingGUI=False, data=None):
     """ Forgot password """
     if usingGUI:
@@ -413,7 +379,6 @@ def forgot(new_user, usingGUI=False, data=None):
                 add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
                 retry = False
                 new_user.conn.send("Password has been changed successfully".encode(ENCODING))
->>>>>>> 787a5f5a40c86213f159f7559f81af6984cda8cf
             else:
                 new_user.conn.send("Email is not associated with account".encode(ENCODING))
                 retry = True
@@ -603,9 +568,7 @@ def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
     It will read through the file, find instances of the Direct messages between sender and target
     if the target has an unread message from the sender it will display those messages in the direct message window with 
     the sender. Once the message is read it will change the read receipt to true.
-
     DM.txt columns line Sender , target, time stamp, read receipt, content 
-
     returns an array of messages that have not been read by the user
     """
 
