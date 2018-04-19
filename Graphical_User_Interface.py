@@ -365,8 +365,10 @@ class RegisterPage(tk.Frame):
         email = self.email.get()
         password = self.password.get()
         # Check file for both password and email
-        registerSend = "GUI|register|" + name + "|" + username + "|" + email + "|" + password
-        self.controller.sock.send(registerSend.encode(ENCODING))
+        dataToSend = "GUI|register|" + name + "|" + username + "|" + email + "|" + password
+
+        self.controller.sock.send(dataToSend.encode(ENCODING))
+
         # send error to user or to server
         data = self.controller.sock.recv(1024)
         # Call chatPage layout if server accepts connection
