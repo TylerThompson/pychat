@@ -389,7 +389,7 @@ def checkUsername(username):
     if len(username) > 15 or '.' in username or ';' in username or ' ' in username:
         return False
     else:
-        # Check file
+        # Check file if user already exists
         infile = search_file(REGISTER, username)
         if infile:
             return False
@@ -523,10 +523,21 @@ def viewRequests(search):
 
 
 def search_file(GLOBAL_VAR, search):
-    """This function searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that
+    """This function first checks  searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that
     reads all the lines and within doing that it uses the .split() function that allows it to read between the determinators"""
+
+    """create file if does not already exist """
+    try:
+        fp = open(GLOBAL_VAR)
+    except IOError:
+        # If not exists, create the file
+        fp = open(GLOBAL_VAR, 'w+')
+        #do i have to close the file?
+        #fp.close()
+
     f = []
     fp = open(GLOBAL_VAR, "r")
+
     for line in fp.readlines():
         li = line.split(';')
         for x in li:
