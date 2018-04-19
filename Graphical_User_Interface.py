@@ -105,20 +105,20 @@ class ForgotPassPage(tk.Frame):
         forgotPassLabel = tk.Label(self, text='Forgot Password')
         forgotPassLabel.pack(side="top", fill="x", pady=(30, 10))
         # Set email
-        email = tk.Entry(self, width=20)
-        email.insert(0, 'Email')
-        email.focus_set()
-        email.pack(side="top", fill="x", pady=(30, 10))
+        self.email = tk.Entry(self, width=20)
+        self.email.insert(0, 'Email')
+        self.email.focus_set()
+        self.email.pack(side="top", fill="x", pady=(30, 10))
         # Change Password
-        password = tk.Entry(self, width=20, text='Password', show='*')
-        password.insert(0, 'Password')
-        password.pack(side="top", fill="x", pady=5)
+        self.password = tk.Entry(self, width=20, text='Password', show='*')
+        self.password.insert(0, 'Password')
+        self.password.pack(side="top", fill="x", pady=5)
         # Confirm password
-        password2 = tk.Entry(self, width=20, text='Password', show='*')
-        password2.insert(0, 'Password')
-        password2.pack(side="top", fill="x", pady=5)
+        self.password2 = tk.Entry(self, width=20, text='Password', show='*')
+        self.password2.insert(0, 'Password')
+        self.password2.pack(side="top", fill="x", pady=5)
         # Change password button
-        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white')
+        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.forgot)
         forgotPassBtn.pack(side="top", fill="x", pady=(40, 10))
         forgotPassBtn.bind('<Return>', self.forgot)
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
@@ -129,8 +129,11 @@ class ForgotPassPage(tk.Frame):
 
     def forgot(self):
         """ Forgot password """
-        if self.password == self.password2:
-            self.controller.sock.send("GUI|forgot|" + self.email + "|" + self.password.encode(ENCODING))
+        email = self.password.get()
+        password = self.password.get()
+        password2 = self.password2.get()
+        if password == password2:
+            self.controller.sock.send("GUI|forgot|" + email + "|" + password.encode(ENCODING))
             data = self.controller.sock.recv(1024).decode()
             if data == "PASS_CHANGE_SUCCESS":
                 display_alert("Password has been changed!")
@@ -322,28 +325,28 @@ class RegisterPage(tk.Frame):
         logo.image = render
         logo.pack(side="top", fill="x", pady=20)
         # Full name of user
-        name = tk.Entry(self, width=20)
-        name.insert(0, 'Full name')
-        name.focus_set()
-        name.pack(side="top", fill="x", pady=5)
+        self.name = tk.Entry(self, width=20)
+        self.name.insert(0, 'Full name')
+        self.name.focus_set()
+        self.name.pack(side="top", fill="x", pady=5)
         # Username of user
-        username = tk.Entry(self, width=20)
-        username.insert(0, 'Username')
-        username.focus_set()
-        username.pack(side="top", fill="x", pady=5)
+        self.username = tk.Entry(self, width=20)
+        self.username.insert(0, 'Username')
+        self.username.focus_set()
+        self.username.pack(side="top", fill="x", pady=5)
         # Email of user
-        email = tk.Entry(self, width=20)
-        email.insert(0, 'Email')
-        email.focus_set()
-        email.pack(side="top", fill="x", pady=5)
+        self.email = tk.Entry(self, width=20)
+        self.email.insert(0, 'Email')
+        self.email.focus_set()
+        self.email.pack(side="top", fill="x", pady=5)
         # Password of user
-        password = tk.Entry(self, width=20, text='Password', show='*')
-        password.insert(0, 'Password')
-        password.pack(side="top", fill="x", pady=5)
+        self.password = tk.Entry(self, width=20, text='Password', show='*')
+        self.password.insert(0, 'Password')
+        self.password.pack(side="top", fill="x", pady=5)
         # Register button
-        registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white')
+        registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.get_register_event)
         registerBtn.pack(side="top", fill="x")
-        registerBtn.bind("<Return>", self.get_register_event)
+
         # Login button
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x")
@@ -357,18 +360,19 @@ class RegisterPage(tk.Frame):
     def get_register_event(self):
         """ Send register data """
         # Get variables
-        name = self.name
-        username = self.username
-        email = self.email
-        password = self.password
+        name = self.name.get()
+        username = self.username.get()
+        email = self.email.get()
+        password = self.password.get()
         # Check file for both password and email
-        self.controller.sock.send("GUI|register|" + name + "|" + username + "|" + email + "|" + password.encode(ENCODING))
+        registerSend = "GUI|register|" + name + "|" + username + "|" + email + "|" + password
+        self.controller.sock.send(registerSend.encode(ENCODING))
         # send error to user or to server
         data = self.controller.sock.recv(1024)
         # Call chatPage layout if server accepts connection
         if data == "REGISTER_SUCCESS":
             """If registration is a success go to login page, then log the person in"""
-            display_alert("Successfully registered, taking you to login page")
+            display_alert("Successfully registered, Please click login")
             self.controller.show_frame("LoginPage")
         else:
             display_alert(data)
