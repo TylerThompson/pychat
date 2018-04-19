@@ -10,6 +10,7 @@ class User:
     username = None
     fullname = None
     email = None
+    password = None
     conn = None
     active = False
     dm = None  # Person who we are currently dming (if no one, then we are broadcasting)
@@ -29,6 +30,11 @@ def clientthread(new_user, addr, usingGUI=False):
         # First param is what method we are going to do
         method = data.split("|")[0]
         print("method: " + method)
+
+        if data.split("|")[1] == "register":
+            register(new_user)
+        else:
+            print("not register")
     else:
         try:
             # Handle Terminal Commands
@@ -298,6 +304,9 @@ def login(new_user):
 
 def register(new_user):
     """ Register a user"""
+    username = new_user.username
+    print("Username "+username)
+   # add_item(REGISTER, username + ";" + email + ";" + fullName + ";" + password)
     tryAgain = True
     while tryAgain:
         # Sign up here
