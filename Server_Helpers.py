@@ -277,26 +277,19 @@ def quit():
 
 def login(new_user, usingGUI=False, data=None):
     """Login allows user to login and start to use the functions of mmessagingand friendship manipulation"""
-    tryAgain = True
-    while tryAgain:
-        fullName = ""
-        email = ""
-        # Get user input
-        if usingGUI:
-            username = data.split('|')[1]
-            password = data.split('|')[2]
-        else:
-            new_user.conn.send("Please enter username".encode(ENCODING))
-            username = new_user.conn.recv(1024).decode()
-            new_user.conn.send("Please enter password".encode(ENCODING))
-            password = new_user.conn.recv(1024).decode()
-            # Check the registration file
+    if usingGUI:
+        exists = False
+        print(data)
+        # Get user and password
+        fullName = None
+        email = None
+        username = data.split('|')[2]
+        password = data.split('|')[3]
+        # Check the registration file
         try:
             f = open(REGISTER, 'r')
         except:
             f = open(REGISTER, 'w')
-            f = open(REGISTER, 'r')
-        exists = False
         # Read lines to see if user exists
         for line in f.readlines():
             if username in line and password in line:
@@ -306,23 +299,45 @@ def login(new_user, usingGUI=False, data=None):
                 email = line[1]
                 fullName = line[2]
         f.close()
-        # Tell the user to keep logging in
         if exists:
-            tryAgain = False
-            if usingGUI:
-                # Create user object
-                new_user = User()
-                new_user.username = username
-                new_user.fullname = fullName
-                new_user.email = email
-                new_user.active = True
-
-                new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
-            else:
-                new_user.conn.send("Login successful".encode(ENCODING))
+            # Create user object
+            new_user.username = username
+            new_user.fullname = fullName
+            new_user.email = email
+            new_user.active = True
+            new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
         else:
-            if usingGUI:
-                new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
+            new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
+    else:
+        tryAgain = True
+        while tryAgain:
+            fullName = ""
+            email = ""
+            # Get user input
+            new_user.conn.send("Please enter username".encode(ENCODING))
+            username = new_user.conn.recv(1024).decode()
+            new_user.conn.send("Please enter password".encode(ENCODING))
+            password = new_user.conn.recv(1024).decode()
+            # Check the registration file
+            try:
+                f = open(REGISTER, 'r')
+            except:
+                f = open(REGISTER, 'w')
+            exists = False
+            # Read lines to see if user exists
+            for line in f.readlines():
+                print('line: ' + line)
+                if username in line and password in line:
+                    # User exists allow user to login
+                    exists = True
+                    username = line[0]
+                    email = line[1]
+                    fullName = line[2]
+            f.close()
+            # Tell the user to keep logging in
+            if exists:
+                tryAgain = False
+                new_user.conn.send("Login successful".encode(ENCODING))
             else:
                 tryAgain = True
                 new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
@@ -332,24 +347,23 @@ def forgot(new_user, usingGUI=False, data=None):
     """ Forgot password """
     if usingGUI:
         # GUI|METHOD|EMAIL|PASSWORD
-        email = data.split('|')[1]
-        password = data.split('|')[2]
-        print('Email: ' + email)
-        print('passing: ' + password)
+        email = data.split('|')[2]
+        password = data.split('|')[3]
         userFound = search_file(REGISTER, email)
-        if userFound != "":
-            userFound = userFound[0]# Make sure its a string
+        if len(userFound) > 0:
+            userFound = userFound[0][0]# Make sure its a string
             # User found, lets change password (we should probably do this a different more secure way_
-            print(userFound)
             # username + "|" + email + "|" + fullName + "|" + password
             username = userFound.split('|')[0]
             email = userFound.split('|')[1]
             name = userFound.split('|')[2]
             remove_item(REGISTER, userFound)
             add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
-            return "SUCCESS_FORGOT_PASS"
+            new_user.conn.send("SUCCESS_FORGOT_PASS".encode(ENCODING))
+            return
         else:
-            return "Could not change password at this time"
+            new_user.conn.send("Could not change password at this time".encode(ENCODING))
+            return
     else:
         retry = True
         while retry:
@@ -367,7 +381,7 @@ def forgot(new_user, usingGUI=False, data=None):
                 retry = False
             # Find user
             userFound = search_file(REGISTER, email)
-            if userFound != "":
+            if len(userFound) > 0:
                 userFound = userFound[0]  # Make sure its a string
                 # User found, lets change password (we should probably do this a different more secure way_
                 print(userFound)
@@ -383,15 +397,15 @@ def forgot(new_user, usingGUI=False, data=None):
                 new_user.conn.send("Email is not associated with account".encode(ENCODING))
                 retry = True
 
-
 def checkUsername(username):
     """ Check if we can use a username"""
-    if len(username) > 15 or '.' in username or ';' in username or ' ' in username:
+    if len(username) < 1 and not len(username) > 15 or '.' in username or ';' in username or ' ' in username or '|' in username:
         return False
     else:
         # Check file if user already exists
         infile = search_file(REGISTER, username)
-        if infile:
+        print('infile: ' + str(infile))
+        if len(infile) > 0:
             return False
         else:
             # Username is not in use
@@ -399,12 +413,12 @@ def checkUsername(username):
 
 def checkEmail(email):
     """ Check if email is in use or valid"""
-    if '@' in email and '.' in email:
+    if not '@' in email and not '.' in email:
         return False
     else:
         # Check file
         infile = search_file(REGISTER, email)
-        if infile:
+        if len(infile) > 0:
             return False
         else:
             # Email is not in use
@@ -417,11 +431,10 @@ def register(new_user, usingGUI=False, data=None):
     if usingGUI:
         # Get the user info from stream
         print(data)
-        name = data.split('|')[0]
-        username = data.split('|')[1]
-        email = data.split('|')[2]
-        password = data.split('|')[3]
-
+        name = data.split('|')[2]
+        username = data.split('|')[3]
+        email = data.split('|')[4]
+        password = data.split('|')[5]
         # Check the username
         check = checkUsername(username)
         if not check:
@@ -433,11 +446,11 @@ def register(new_user, usingGUI=False, data=None):
             new_user.conn.send("Email is in use or not valid".encode(ENCODING))
             return False
         # Check password
-        if (len(password) < 6):
+        if len(password) < 6:
             new_user.conn.send('password needs to be greater than 6 characters'.encode(ENCODING))
         # Allow registration
         # If everything is okay, lets save everything and append to file
-        add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
+        add_item(REGISTER, username + "|" + email + "|" + name + "|" + password+'\n')
         new_user.conn.send("You are now registered, login now".encode(ENCODING))
         return True
 
@@ -525,19 +538,14 @@ def viewRequests(search):
 def search_file(GLOBAL_VAR, search):
     """This function first checks  searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that
     reads all the lines and within doing that it uses the .split() function that allows it to read between the determinators"""
-
     """create file if does not already exist """
     try:
-        fp = open(GLOBAL_VAR)
+        fp = open(GLOBAL_VAR, 'r')
     except IOError:
         # If not exists, create the file
-        fp = open(GLOBAL_VAR, 'w+')
-        #do i have to close the file?
-        #fp.close()
+        fp = open(GLOBAL_VAR, 'w')
 
     f = []
-    fp = open(GLOBAL_VAR, "r")
-
     for line in fp.readlines():
         li = line.split(';')
         for x in li:
@@ -548,11 +556,15 @@ def search_file(GLOBAL_VAR, search):
 
 def remove_item(GLOBAL_VAR, search):
     """ Remove item from file"""
-    fp = open(GLOBAL_VAR, "w")
-    for line in fp.readlines():
-        if line != search:
-            fp.write(line)
-    fp.close()
+    f = open(GLOBAL_VAR, "r")
+    lines = f.readlines()
+    f.close()
+
+    f = open(GLOBAL_VAR, "w")
+    for line in lines:
+        if not search in line:
+            f.write(line)
+    f.close()
 
 def add_item(GLOBAL_VAR, message):
     """This function will add a message that the user enters, into the DM.txt file"""
@@ -561,7 +573,7 @@ def add_item(GLOBAL_VAR, message):
     fp.close()
 
 
-def remove_item(GLOBAL_VAR, personRemoving, personBeingRemoved):
+def remove_friend(GLOBAL_VAR, personRemoving, personBeingRemoved):
     """ Remove a person from the friendship, pending"""
     f = open(GLOBAL_VAR, 'r')
     lines = f.readlines()

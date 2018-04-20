@@ -82,7 +82,7 @@ class PyChatApp(tk.Tk):
 
 def display_alert(message):
     """Display alert box"""
-    messagebox.showinfo('Error', message)
+    messagebox.showinfo('Warning', message)
 
 class ForgotPassPage(tk.Frame):
     """ Forgot password page"""
@@ -120,7 +120,6 @@ class ForgotPassPage(tk.Frame):
         # Change password button
         forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.forgot)
         forgotPassBtn.pack(side="top", fill="x", pady=(40, 10))
-        forgotPassBtn.bind('<Return>', self.forgot)
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x", pady=(5, 5))
         # button.bind('<Button-1>', self.get_register_event)
@@ -129,13 +128,14 @@ class ForgotPassPage(tk.Frame):
 
     def forgot(self):
         """ Forgot password """
-        email = self.password.get()
+        email = self.email.get()
         password = self.password.get()
         password2 = self.password2.get()
         if password == password2:
-            self.controller.sock.send("GUI|forgot|" + email + "|" + password.encode(ENCODING))
-            data = self.controller.sock.recv(1024).decode()
-            if data == "PASS_CHANGE_SUCCESS":
+            data = "GUI|forgot|" + email + "|" + password
+            self.controller.sock.send(data.encode(ENCODING))
+            data = self.controller.sock.recv(1024).decode(ENCODING)
+            if data == "SUCCESS_FORGOT_PASS":
                 display_alert("Password has been changed!")
             else:
                 display_alert("There was an error changing your password.")
@@ -279,6 +279,7 @@ class LoginPage(tk.Frame):
 
     def get_login_event(self):
         """ Check login for correct info"""
+        print('clicking login')
         # Get variables
         email = self.email.get()
         password = self.password.get()
@@ -288,10 +289,12 @@ class LoginPage(tk.Frame):
         if email.lower() == "email" or password.lower() == "password":
             display_alert("Please enter a value")
             return
+        print('sending data to server')
         dataToSend = "GUI|login|" + email + "|" + password
         self.controller.sock.send(dataToSend.encode(ENCODING))
+        print('sent data to server')
         # send error to user or to server
-        data = self.controller.sock.recv(1024).decode()
+        data = self.controller.sock.recv(1024).decode(ENCODING)
         print('data: ' + data)
         # Call chatPage layout if server accepts connection
         if data == "LOGIN_SUCCESS":

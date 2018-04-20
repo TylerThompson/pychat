@@ -1,5 +1,5 @@
 # Python program to implement server side of chat room.
-import socket
+from socket import *
 import select
 import sys
 import time
@@ -11,8 +11,8 @@ socket. This is used when we have an Internet Domain with
 any two hosts The second argument is the type of socket.
 SOCK_STREAM means that data or characters are read in
 a continuous flow."""
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server = socket(AF_INET, SOCK_STREAM)
+server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
 """
 binds the server to an entered IP address and at the
@@ -32,39 +32,42 @@ while True:
     conn which is a socket object for that user, and addr 
     which contains the IP address of the client that just 
     connected"""
+    print('looping')
     try:
-        time.sleep(5)
         print('about to accept')
         conn, addr = server.accept()
         # Create a new user
         getGUI = None
-
+        print('creating new user?')
         new_user = User()
         new_user.conn = conn
+        list_of_clients.append(conn)
 
-        # Pass that user into loginOrRegister
-        data = conn.recv(1024)
-        if data != "" and 'GUI' in data.decode(ENCODING):
-            data = data.decode(ENCODING)
-            if 'GUI' in data:
-                print(addr[0] + ' Connected via gui')
+        while True:
+            #time.sleep(5)
+            # Pass that user into loginOrRegister
+            data = conn.recv(1024)
+            if data != "" and 'GUI' in data.decode(ENCODING):
+                data = data.decode(ENCODING)
+                if 'GUI' in data:
+                    print(addr[0] + ' Connected via gui')
+
+                    start_new_thread(clientthread, (new_user, addr, True, data))
+            else:
+                print(addr[0] + 'connected via terminal')
+                loginOrRegister(new_user)
+                print('send help menu')
+                #send message menu
+                helpMenu(conn)
+                """Maintains a list of clients for ease of broadcasting
+                a message to all available people in the chatroom"""
                 list_of_clients.append(conn)
-                start_new_thread(clientthread, (new_user, addr, True, data))
-        else:
-            print(addr[0] + 'connected via terminal')
-            loginOrRegister(new_user)
-            print('send help menu')
-            #send message menu
-            helpMenu(conn)
-            """Maintains a list of clients for ease of broadcasting
-            a message to all available people in the chatroom"""
-            list_of_clients.append(conn)
 
-            # prints the address of the user that just connected
-            print(addr[0] + " connected")
+                # prints the address of the user that just connected
+                print(addr[0] + " connected")
 
-            # creates and individual thread for every user that connects
-            start_new_thread(clientthread, (new_user, addr))
+                # creates and individual thread for every user that connects
+                start_new_thread(clientthread, (new_user, addr))
     except:
         print("There was some kind of error that happened")
 #new_user.conn.close()
