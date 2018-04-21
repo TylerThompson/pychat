@@ -8,6 +8,7 @@ list_of_clients = []
 
 ENCODING = 'utf-8'
 
+
 class User:
     username = None
     fullname = None
@@ -45,6 +46,10 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
         elif method == "forgot":
             print('forgot password')
             forgot(new_user, True, data)
+        elif method == "logout":
+            logout(new_user, list_of_clients)
+        elif method == 'msg':
+            sendMessage(new_user, data.split('|')[1])
         # TODO finish the messaging for GUI
 
         #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
@@ -260,7 +265,6 @@ def viewPendingRequests(new_user):
             pending.append(f[0])
     return pending
 
-
 def searchPendingRequests(new_user, search):
     """ Search all my pending requests for specific person"""
     view = viewPendingRequests(new_user)
@@ -268,11 +272,6 @@ def searchPendingRequests(new_user, search):
         if line == search:
             return True
     return False
-
-
-def quit():
-    """returns quit if an error is thrown or if a user logs off"""
-    return "quit"
 
 
 def login(new_user, usingGUI=False, data=None):
@@ -342,6 +341,13 @@ def login(new_user, usingGUI=False, data=None):
                 tryAgain = True
                 new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     return True
+
+def logout(new_user, allUsersConnected):
+    """ Logout """
+    try:
+        del allUsersConnected[new_user.username]
+    except:
+        print('could not remove user from list_of_clients')
 
 def forgot(new_user, usingGUI=False, data=None):
     """ Forgot password """
@@ -423,7 +429,6 @@ def checkEmail(email):
         else:
             # Email is not in use
             return True
-
 
 def register(new_user, usingGUI=False, data=None):
     """ Register a user"""
@@ -512,6 +517,7 @@ def register(new_user, usingGUI=False, data=None):
             return True
 
 
+
 def loginOrRegister(new_user):
     """ Ask the user if they want to login or register"""
     new_user.conn.send("Would you like to login or register? (0 = Login, 1= Register)".encode(ENCODING))
@@ -521,7 +527,6 @@ def loginOrRegister(new_user):
     else:
         login(new_user)
     return True
-
 
 def viewRequests(search):
     """View current pending request for the currennt user, return true and a list the current pending requests"""
@@ -533,7 +538,6 @@ def viewRequests(search):
         if li[0] == search:
             f.append(li[1])
     return f
-
 
 def search_file(GLOBAL_VAR, search):
     """This function first checks  searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that

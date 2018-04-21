@@ -1,8 +1,10 @@
 # Python program to implement server side of chat room.
 from socket import *
-import select
+from select import *
 import sys
 import time
+from queue import *
+from signal import *
 from _thread import *
 from Server_Helpers import *
 
@@ -27,6 +29,7 @@ increased as per convenience.
 """
 server.listen(100)
 
+# todo fix this
 while True:
     """Accepts a connection request and stores two parameters, 
     conn which is a socket object for that user, and addr 

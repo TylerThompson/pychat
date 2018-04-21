@@ -9,6 +9,7 @@ ENCODING = 'utf-8'
 HOST = 'localhost'
 PORT = 8080
 
+
 class PyChatApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -20,6 +21,9 @@ class PyChatApp(tk.Tk):
         if os.name == 'nt':
             imageIcon = 'pychat_2d5_icon.ico'
         self.iconbitmap(imageIcon)
+
+        # Protocol for closing window using 'x' button
+        self.protocol("WM_DELETE_WINDOW", self.on_closing_event)
 
         # Establish connection to server
         self.host = HOST
@@ -34,7 +38,7 @@ class PyChatApp(tk.Tk):
         if self.exit_event:
             exit()
         # Send data to server to let it know we are doing a GUI
-        #self.sock.send("GUI".encode(ENCODING))
+        # self.sock.send("GUI".encode(ENCODING))
 
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible
@@ -53,6 +57,15 @@ class PyChatApp(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
         # Show login first
         self.show_frame("LoginPage")
+
+    def on_closing_event(self):
+        """ Let the server know that we are logging off"""
+        try:
+            self.sock.send("GUI|logout".encode(ENCODING))
+            self.sock.close()
+            exit()
+        except:
+            exit()
 
     def set_target(self, target):
         """Set target for messages"""
@@ -84,8 +97,10 @@ def display_alert(message):
     """Display alert box"""
     messagebox.showinfo('Warning', message)
 
+
 class ForgotPassPage(tk.Frame):
     """ Forgot password page"""
+
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
@@ -118,12 +133,14 @@ class ForgotPassPage(tk.Frame):
         self.password2.insert(0, 'Password')
         self.password2.pack(side="top", fill="x", pady=5)
         # Change password button
-        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.forgot)
+        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff',
+                                  activeforeground='white', foreground='white', command=self.forgot)
         forgotPassBtn.pack(side="top", fill="x", pady=(40, 10))
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x", pady=(5, 5))
         # button.bind('<Button-1>', self.get_register_event)
-        registerBtn = tk.Button(self, text='Register', borderwidth=0, command=lambda: self.controller.show_frame("RegisterPage"))
+        registerBtn = tk.Button(self, text='Register', borderwidth=0,
+                                command=lambda: self.controller.show_frame("RegisterPage"))
         registerBtn.pack(side="top", fill="x", pady=(5, 10))
 
     def forgot(self):
@@ -142,13 +159,17 @@ class ForgotPassPage(tk.Frame):
         else:
             display_alert("Passwords did not match!")
 
+
 class ChatPage(tk.Frame):
     """ Chat Page"""
+
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
         self.entry = None
         self.login = None
+        self.messagebox = None
+        self.target = None
 
         tk.Frame.__init__(self, self.parent)
 
@@ -167,8 +188,8 @@ class ChatPage(tk.Frame):
         frame01 = tk.Frame(self.controller)
         frame01.grid(column=1, row=0, rowspan=3, sticky="nsew")
         # Message entry
-        frame02 = tk.Frame(self.controller)
-        frame02.grid(column=0, row=2, columnspan=1, sticky="nsew")
+        self.messagebox = tk.Frame(self.controller)
+        self.messagebox.grid(column=0, row=2, columnspan=1, sticky="nsew")
         # Buttons
         frame03 = tk.Frame(self.controller)
         frame03.grid(column=0, row=3, columnspan=2, sticky="nsew")
@@ -189,7 +210,7 @@ class ChatPage(tk.Frame):
         self.logins_list.bind('<<ListboxSelect>>', self.selected_login_event)
 
         # Entry widget for typing messages in
-        self.entry = tk.Text(frame02)
+        self.entry = tk.Text(self.messagebox)
         self.entry.focus_set()
         self.entry.bind('<Return>', self.send_entry_event)
 
@@ -226,7 +247,11 @@ class ChatPage(tk.Frame):
         """Send message from entry field to target"""
         text = self.entry.get(1.0, tk.END)
         if text != '\n':
-            message = 'GUI|msg|' + self.login + '|' + self.target + '|' + text[:-1]
+            print('text: ' + text)
+            message = 'GUI|msg'
+            if self.target != None:
+                message += '|' + self.target
+            message += '|' + text[:-1]
             print(message)
             self.controller.sock.send(message.encode(ENCODING))
             self.entry.mark_set(tk.INSERT, 1.0)
@@ -235,8 +260,10 @@ class ChatPage(tk.Frame):
         else:
             messagebox.showinfo('Warning', 'You must enter non-empty message')
 
+
 class LoginPage(tk.Frame):
     """ Login Page """
+
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
@@ -265,13 +292,15 @@ class LoginPage(tk.Frame):
         self.password.insert(0, 'Password')
         self.password.pack(side="top", fill="x", pady=5)
         # Login Button
-        loginBtn = tk.Button(self, text='Login', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.get_login_event)
+        loginBtn = tk.Button(self, text='Login', bg='#0084ff', activebackground='#0084ff', activeforeground='white',
+                             foreground='white', command=self.get_login_event)
         loginBtn.pack(side="top", fill="x")
         # Register Button
         registerBtn = tk.Button(self, text='Register', command=lambda: self.controller.show_frame("RegisterPage"))
         registerBtn.pack(side="top", fill="x")
         # Forgot button
-        forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0, command=lambda: self.controller.show_frame("ForgotPassPage"))
+        forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0,
+                              command=lambda: self.controller.show_frame("ForgotPassPage"))
         forgotBtn.pack(side="top", fill="x")
         # Copy right
         copy = tk.Label(self, text='PyChat © 2018', width=20)
@@ -302,8 +331,10 @@ class LoginPage(tk.Frame):
         else:
             display_alert("Incorrect Email/Password")
 
+
 class RegisterPage(tk.Frame):
     """ Registration Page"""
+
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
@@ -347,14 +378,16 @@ class RegisterPage(tk.Frame):
         self.password.insert(0, 'Password')
         self.password.pack(side="top", fill="x", pady=5)
         # Register button
-        registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.get_register_event)
+        registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff',
+                                activeforeground='white', foreground='white', command=self.get_register_event)
         registerBtn.pack(side="top", fill="x")
 
         # Login button
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x")
         # Forgot button
-        forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0, command=lambda: self.controller.show_frame("ForgotPassPage"))
+        forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0,
+                              command=lambda: self.controller.show_frame("ForgotPassPage"))
         forgotBtn.pack(side="top", fill="x", pady=10)
         # Copy right
         copy = tk.Label(self, text='PyChat © 2018', width=20)
@@ -381,6 +414,7 @@ class RegisterPage(tk.Frame):
             self.controller.show_frame("LoginPage")
         else:
             display_alert(data)
+
 
 if __name__ == "__main__":
     app = PyChatApp()
