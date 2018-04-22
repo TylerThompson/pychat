@@ -38,22 +38,48 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
         print('method: ' + method)
 
         if method == 'login':
-            print('logging you in')
+            # GUI|login|username|password
             login(new_user, True, data)
         elif method == 'register':
-            print('calling register')
+            # GUI|register|name|username|email|password
             register(new_user, True, data)
         elif method == "forgot":
-            print('forgot password')
+            # GUI|forgot|password
             forgot(new_user, True, data)
         elif method == "logout":
+            # GUI|logout
             logout(new_user, list_of_clients)
+        elif method == 'checkUsername':
+            # GUI|checkUsername|username
+            checkUsername(data.split('|')[1])
+        elif method == 'checkEmail':
+            # GUI|checkEmail|email
+            checkEmail(data.split('|')[1])
         elif method == 'msg':
+            # GUI|msg|message # Broadcast
+            # GUI|msg|user|message # Selected user
             sendMessage(new_user, data.split('|')[1])
-        # TODO finish the messaging for GUI
+        elif method == 'addFriend':
+            # GUI|addFriend|target
+            addFriend(new_user, data, True)
+        elif method == 'removeFriend':
+            # GUI|removeFriend|target
+            removeFriend(new_user, data, True)
+        elif method == 'viewFriends':
+            # GUI|viewFriends
+            viewFriends(new_user, True)
+        elif method == 'viewSentRequests':
+            # GUI|viewSentRequests
+            viewSentPendingRequests(new_user)
+        elif method == 'viewRequests':
+            # GUI|viewRequests
+            viewRequests(new_user)
+        elif method == 'viewFriends':
+            # GUI|viewFriends
+            viewFriends(new_user)
 
-        #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
-        print('sent user a message that it was successful')
+
+
     else:
         print('in terminal?')
         try:
@@ -166,7 +192,7 @@ def checkFriends(new_user, usernameOfFriend):
     else:
         return False
 
-def addFriend(new_user, friendReq):
+def addFriend(new_user, friendReq, usingGUI=False):
     """Add a friendship connection in pending.txt. In pending.txt, each line will show
        what users are requesting a friendship with what user  A,B    A is requesting a friendship with B.
        There will be no duplicates whereas B,A would be considered a duplicate to A,B """
@@ -174,7 +200,10 @@ def addFriend(new_user, friendReq):
     viewP = searchPendingRequests(new_user, friendReq)
     if viewP != []:
         # You already sent a request to this user
-        new_user.conn.send("You already sent a request to this user")
+        if usingGUI:
+            new_user.conn.send("REQUEST_SENT".encode(ENCODING))
+        else:
+            new_user.conn.send("You already sent a request to this user".encode(ENCODING))
         return False
     # Check if user sent request to me
     viewM = viewPendingRequests(new_user)
@@ -182,13 +211,19 @@ def addFriend(new_user, friendReq):
         # User sent me a friend request, approve it
         add_item(FRIENDSHIP, new_user.username + ";" + friendReq)
         # Let the user know the friend request has been approved
-        new_user.conn.send("Friend request approved")
+        if usingGUI:
+            new_user.conn.send("FRIEND_APPROVED".encode(ENCODING))
+        else:
+            new_user.conn.send("Friend request approved".encode(ENCODING))
         return True
     # check if the users are already friends
     viewF = viewFriends(new_user)
     for line in viewF:
         if friendReq in line:
-            new_user.conn.send("You are already friends")
+            if usingGUI:
+                new_user.conn.send("FRIENDS".encode(ENCODING))
+            else:
+                new_user.conn.send("You are already friends".encode(ENCODING))
             return True
     # if request hasnt been made or the users are not friends add a request to pending.txt
     if viewP == [] and viewM == []:
@@ -199,47 +234,53 @@ def addFriend(new_user, friendReq):
             # Loop through all the clients to find a username and send message to that connection
             if clients != friendReq:
                 try:
-                    clients.send(
-                        new_user.username + " sent you a friend request: type (approve/deny " + new_user.username + ")".encode(ENCODING))
+                    clients.send(new_user.username + " sent you a friend request: type (approve/deny " + new_user.username + ")".encode(ENCODING))
                 except:
-                    new_user.conn.send("There was an error sending your friend request")
+                    new_user.conn.send("There was an error sending your friend request".encode(ENCODING))
                     return False
-        new_user.conn.send("Friend request sent to " + friendReq)
+        if usingGUI:
+            new_user.conn.send("REQUEST_SENT".encode(ENCODING))
+        else:
+            new_user.conn.send("Friend request sent to " + friendReq)
         return True
 
-def removeFriend(new_user, friend):
+def removeFriend(new_user, friend, usingGUI=False):
     """ Remove a person from pending or friendships"""
-    remove_item(FRIENDSHIP, new_user.username, friend)
-    remove_item(PENDING, new_user.username, friend)
-    new_user.conn.send("You have removed " + friend.encode(ENCODING))
+    remove_friend(FRIENDSHIP, new_user.username, friend)
+    remove_friend(PENDING, new_user.username, friend)
+    if usingGUI:
+        new_user.conn.send("FRIEND_REMOVED".encode(ENCODING))
+    else:
+        new_user.conn.send("You have removed " + friend.encode(ENCODING))
     return True
 
-def viewFriends(user):
+def viewFriends(user, usernameToSearch=None):
     """Will show all of the friends with whom the client / requesting user,  is friends with"""
-    friendsList = search_file(FRIENDSHIP, user.username)
-    prepare = []
-    i = 0
-    if friendsList == []:
-        prepare.append("You currently have no friends to display")
-        return prepare
-    else:
-        s = ""
-        if len(friendsList) > 1:
-            s = "s"
-        prepare.append("You have " + str(len(friendsList)) + " friend" + s)
-    for friend in friendsList:
-        i = i + 1
-        prepare.append(str(i) + ": " + friend)
-    return prepare
+    if usernameToSearch != None:
 
-def viewFriends(new_user, usernameToSearch):
-    """ View friends for the user"""
-    checkFriend = viewFriends(new_user.username)
-    for name in checkFriend:
-        if usernameToSearch == name:
-            # Users are in fact friends
-            return True
-    return False
+        checkFriend = viewFriends(user.username)
+        for name in checkFriend:
+            if usernameToSearch == name:
+                # Users are in fact friends
+                return True
+        return False
+
+    else:
+        friendsList = search_file(FRIENDSHIP, user.username)
+        prepare = []
+        i = 0
+        if friendsList == []:
+            prepare.append("You currently have no friends to display")
+            return prepare
+        else:
+            s = ""
+            if len(friendsList) > 1:
+                s = "s"
+            prepare.append("You have " + str(len(friendsList)) + " friend" + s)
+        for friend in friendsList:
+            i = i + 1
+            prepare.append(str(i) + ": " + friend)
+        return prepare
 
 
 def viewSentPendingRequests(new_user):
@@ -410,7 +451,6 @@ def checkUsername(username):
     else:
         # Check file if user already exists
         infile = search_file(REGISTER, username)
-        print('infile: ' + str(infile))
         if len(infile) > 0:
             return False
         else:
@@ -529,7 +569,7 @@ def loginOrRegister(new_user):
     return True
 
 def viewRequests(search):
-    """View current pending request for the currennt user, return true and a list the current pending requests"""
+    """View current pending request for the current user, return true and a list the current pending requests"""
     f = []
     fp = open(PENDING, "r")
     # {"friendA: name, friendB: name2, date: 10-20} <-- A made the friend request
@@ -537,7 +577,10 @@ def viewRequests(search):
         li = line.split(';')
         if li[0] == search:
             f.append(li[1])
-    return f
+    s = ""
+    for st in f:
+        s += "\n" +s
+    return s # Push a string instead of list for this
 
 def search_file(GLOBAL_VAR, search):
     """This function first checks  searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that
@@ -550,11 +593,14 @@ def search_file(GLOBAL_VAR, search):
         fp = open(GLOBAL_VAR, 'w')
 
     f = []
-    for line in fp.readlines():
-        li = line.split(';')
-        for x in li:
-            if search in x:
-                f.append(li)
+    try:
+        for line in fp.readlines():
+            li = line.split(';')
+            for x in li:
+                if search in x:
+                    f.append(li)
+    except:
+        return []
     fp.close()
     return f
 
