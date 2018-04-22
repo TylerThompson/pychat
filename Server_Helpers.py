@@ -275,34 +275,20 @@ def searchPendingRequests(new_user, search):
 
 
 def login(new_user, usingGUI=False, data=None):
-
-    """Login allows user to login and start to use the functions of messaging and friendship manipulation"""
-    tryAgain = True
-    while tryAgain:
-        fullName = ""
-        email = ""
-        # Get user input
-        print("login data format: " + data)
-        if usingGUI:
-            username = data.split('|')[1]
-            password = data.split('|')[2]
-        else:
-            new_user.conn.send("Please enter username".encode(ENCODING))
-            username = new_user.conn.recv(1024).decode()
-            new_user.conn.send("Please enter password".encode(ENCODING))
-            password = new_user.conn.recv(1024).decode()
-
-            # Check the registration file
-        try:
-            f = open(REGISTER)
-        except IOError:
-            """create file if does not already exist, then close it """
-            f = open(REGISTER, 'w+').close()
-
-        f = open(REGISTER, 'r')
+    """Login allows user to login and start to use the functions of mmessagingand friendship manipulation"""
+    if usingGUI:
         exists = False
-
-
+        print(data)
+        # Get user and password
+        fullName = None
+        email = None
+        username = data.split('|')[2]
+        password = data.split('|')[3]
+        # Check the registration file
+        try:
+            f = open(REGISTER, 'r')
+        except:
+            f = open(REGISTER, 'w')
         # Read lines to see if user exists
         for line in f.readlines():
             if username in line and password in line:
@@ -311,7 +297,6 @@ def login(new_user, usingGUI=False, data=None):
                 username = line[0]
                 email = line[1]
                 fullName = line[2]
-                password = line[3]
         f.close()
         if exists:
             # Create user object
@@ -447,20 +432,14 @@ def checkEmail(email):
 
 def register(new_user, usingGUI=False, data=None):
     """ Register a user"""
-    print(usingGUI)
+
     if usingGUI:
         # Get the user info from stream
-
-        print("register using GUI "+data)
-        """Data format: GUI|register|Full name|Username|Email|PasswordPassword """
-
         print(data)
-
         name = data.split('|')[2]
         username = data.split('|')[3]
         email = data.split('|')[4]
         password = data.split('|')[5]
-
         # Check the username
         check = checkUsername(username)
         if not check:
@@ -568,9 +547,7 @@ def search_file(GLOBAL_VAR, search):
         fp = open(GLOBAL_VAR, 'r')
     except IOError:
         # If not exists, create the file
-        fp = open(GLOBAL_VAR, 'w+').close()
-
-    fp = open(GLOBAL_VAR, 'w')
+        fp = open(GLOBAL_VAR, 'w')
 
     f = []
     for line in fp.readlines():
@@ -595,14 +572,6 @@ def remove_item(GLOBAL_VAR, search):
 
 def add_item(GLOBAL_VAR, message):
     """This function will add a message that the user enters, into the DM.txt file"""
-    """create file if does not already exist """
-    try:
-        fp = open(GLOBAL_VAR)
-    except IOError:
-        # If not exists, create the file, then close
-        fp = open(GLOBAL_VAR, 'w+').close()
-
-    """Append message to file"""
     fp = open(GLOBAL_VAR, "a+")
     fp.write(message)
     fp.close()
