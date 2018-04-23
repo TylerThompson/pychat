@@ -23,6 +23,7 @@ def helpMenu(new_user):
     helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
     new_user.conn.send(helpCmds.encode(ENCODING))
 
+
 def clientthread(new_user, addr, usingGUI=False, data=None):
     """ Sends a message to the client who'S user is conn """
     # Handle GUI commands different from terminal
@@ -77,8 +78,6 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
         elif method == 'viewFriends':
             # GUI|viewFriends
             viewFriends(new_user)
-
-
 
     else:
         print('in terminal?')
@@ -145,13 +144,16 @@ def sendMessage(new_user, message):
     message_to_send = "<" + new_user.username + "> " + message
     broadcast(message_to_send, new_user)
 
+
 def remove(new_user):
     """ Remove client from pool of other clients"""
     if new_user in list_of_clients:
         list_of_clients.remove(new_user)
 
+
 def broadcast(message, new_user):
     """ Broadcast a message to all connected clients """
+    print("Broadcasting msg: " + message)
     for clients in list_of_clients:
         if clients != new_user.conn:
             try:
@@ -160,6 +162,7 @@ def broadcast(message, new_user):
                 clients.close()
                 # if the link is broken, we remove the client
                 remove(clients)
+
 
 def direct(message, new_user):
     """ Send a message to a user if you are friends with them"""
@@ -177,6 +180,7 @@ def direct(message, new_user):
     else:
         new_user.conn.send("You are not friends with the user, you need to be in order to message them")
 
+
 def checkFriends(new_user, usernameOfFriend):
     """ Check if users are friends or not"""
     # Check if users are friends first
@@ -191,6 +195,7 @@ def checkFriends(new_user, usernameOfFriend):
         return False
     else:
         return False
+
 
 def addFriend(new_user, friendReq, usingGUI=False):
     """Add a friendship connection in pending.txt. In pending.txt, each line will show
@@ -244,6 +249,7 @@ def addFriend(new_user, friendReq, usingGUI=False):
             new_user.conn.send("Friend request sent to " + friendReq)
         return True
 
+
 def removeFriend(new_user, friend, usingGUI=False):
     """ Remove a person from pending or friendships"""
     remove_friend(FRIENDSHIP, new_user.username, friend)
@@ -253,6 +259,7 @@ def removeFriend(new_user, friend, usingGUI=False):
     else:
         new_user.conn.send("You have removed " + friend.encode(ENCODING))
     return True
+
 
 def viewFriends(user, usernameToSearch=None):
     """Will show all of the friends with whom the client / requesting user,  is friends with"""
@@ -305,6 +312,7 @@ def viewPendingRequests(new_user):
         if f[1] == new_user.username:  # This is the requestee
             pending.append(f[0])
     return pending
+
 
 def searchPendingRequests(new_user, search):
     """ Search all my pending requests for specific person"""
@@ -383,12 +391,14 @@ def login(new_user, usingGUI=False, data=None):
                 new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     return True
 
+
 def logout(new_user, allUsersConnected):
     """ Logout """
     try:
         del allUsersConnected[new_user.username]
     except:
         print('could not remove user from list_of_clients')
+
 
 def forgot(new_user, usingGUI=False, data=None):
     """ Forgot password """
@@ -444,6 +454,7 @@ def forgot(new_user, usingGUI=False, data=None):
                 new_user.conn.send("Email is not associated with account".encode(ENCODING))
                 retry = True
 
+
 def checkUsername(username):
     """ Check if we can use a username"""
     if len(username) < 1 and not len(username) > 15 or '.' in username or ';' in username or ' ' in username or '|' in username:
@@ -457,6 +468,7 @@ def checkUsername(username):
             # Username is not in use
             return True
 
+
 def checkEmail(email):
     """ Check if email is in use or valid"""
     if not '@' in email and not '.' in email:
@@ -469,6 +481,7 @@ def checkEmail(email):
         else:
             # Email is not in use
             return True
+
 
 def register(new_user, usingGUI=False, data=None):
     """ Register a user"""
@@ -579,8 +592,8 @@ def viewRequests(search):
             f.append(li[1])
     s = ""
     for st in f:
-        s += "\n" +s
-    return s # Push a string instead of list for this
+        s += "\n" + s
+    return s  # Push a string instead of list for this
 
 def search_file(GLOBAL_VAR, search):
     """This function first checks  searches the DM.txt file for what the user is looking for. It does this by first going through a for loop that

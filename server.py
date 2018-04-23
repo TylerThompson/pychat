@@ -55,7 +55,7 @@ while True:
                 if 'GUI' in data:
                     print(addr[0] + ' Connected via gui')
 
-                    start_new_thread(clientthread, (new_user, addr, True, data))
+                    start_new_thread(clientthread, (new_user, addr, True, data)).start()
             else:
                 print(addr[0] + 'connected via terminal')
                 loginOrRegister(new_user)
@@ -70,7 +70,7 @@ while True:
                 print(addr[0] + " connected")
 
                 # creates and individual thread for every user that connects
-                start_new_thread(clientthread, (new_user, addr))
+                start_new_thread(clientthread, (new_user, addr)).start()
     except:
         print("There was some kind of error that happened")
 #new_user.conn.close()
