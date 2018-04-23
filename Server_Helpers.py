@@ -18,172 +18,314 @@ class User:
     active = False
     dm = None  # Person who we are currently dming (if no one, then we are broadcasting)
 
-def helpMenu(new_user):
-    """ Display the help menu if a user gets stuck """
-    helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
-    new_user.conn.send(helpCmds.encode(ENCODING))
+#def helpMenu(new_user):
+#    """ Display the help menu if a user gets stuck """
+#    helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
+#    new_user.conn.send(helpCmds.encode(ENCODING))
 
-
-def clientthread(new_user, addr, usingGUI=False, data=None):
-    """ Sends a message to the client who'S user is conn """
-    # Handle GUI commands different from terminal
-    if usingGUI:
-        # Use a splitting method when sending the data through
-        # First param is what method we are going to do
-        method = data.split("|")[0]
-        print("method: " + method)
-
-        allData = data.split('|')
-        print('split this')
-        method = allData[1]
-        print('method: ' + method)
-
-        if method == 'login':
-            # GUI|login|username|password
-            login(new_user, True, data)
-        elif method == 'register':
-            # GUI|register|name|username|email|password
-            register(new_user, True, data)
-        elif method == "forgot":
-            # GUI|forgot|password
-            forgot(new_user, True, data)
-        elif method == "logout":
-            # GUI|logout
-            logout(new_user, list_of_clients)
-        elif method == 'checkUsername':
-            # GUI|checkUsername|username
-            checkUsername(data.split('|')[1])
-        elif method == 'checkEmail':
-            # GUI|checkEmail|email
-            checkEmail(data.split('|')[1])
-        elif method == 'msg':
-            # GUI|msg|message # Broadcast
-            # GUI|msg|user|message # Selected user
-            sendMessage(new_user, data.split('|')[2:])
-        elif method == 'addFriend':
-            # GUI|addFriend|target
-            addFriend(new_user, data, True)
-        elif method == 'removeFriend':
-            # GUI|removeFriend|target
-            removeFriend(new_user, data, True)
-        elif method == 'viewFriends':
-            # GUI|viewFriends
-            viewFriends(new_user, True)
-        elif method == 'viewSentRequests':
-            # GUI|viewSentRequests
-            viewSentPendingRequests(new_user)
-        elif method == 'viewRequests':
-            # GUI|viewRequests
-            viewRequests(new_user)
-        elif method == 'viewFriends':
-            # GUI|viewFriends
-            viewFriends(new_user)
-
+# Helper functions for processing data
+def processLogin(self, data, connection):
+    """ Helper to process login transactions """
+    auth = login(self, True, data)
+    message = data.split("|", 4)
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[2]] = connection
+        print(message[2] + ' has logged in')
+        # Updating login list
+        self.update_login_list()
     else:
-        print('in terminal?')
-        try:
-            # Handle Terminal Commands
-            new_user.conn.send("Welcome to this chat room!".encode(ENCODING))
-            while True:
-                try:
-                    message = new_user.conn.recv(2048)
-                    if message:
-                        # Process the message that the user sent for commands
-                        if " " in message:
-                            msg = message.split(" ")
-                            if msg == "help" or msg == "-h":
-                                helpMenu(new_user)
-                                continue
-                            elif msg == "quit":
-                                quit()
-                                continue
-                            elif msg == "addfriend":
-                                if msg[1] == "":
-                                    new_user.conn.send("You must use the friends username to add them")
-                                addFriend(new_user, msg[1])
-                                continue
-                            elif msg == "removefriend":
-                                if msg[1] == "":
-                                    new_user.conn.send("You must use the friends username to remove them")
-                                removeFriend(new_user, msg[1])
-                                continue
-                            elif msg == "viewfriends":
-                                v = viewFriends(new_user)
-                                for x in v:
-                                    new_user.conn.send(str(x).encode(ENCODING))
-                                    continue
-                            elif msg == "direct":
-                                if msg[1] == "":
-                                    new_user.conn.send("You must use the friends username to direct them")
-                                    # Send friend a message that you want to direct them
-                                    new_user.conn.send("You are now in direct mode with " + msg[1])
-                                    # Send notification to friend
-                                continue
-                            elif msg == "broadcast":
-                                new_user.dm = ""
-                                new_user.conn.send("You are not in broadcast mode")
-                            else:
-                                sendMessage(new_user, message)
-                            sendMessage(new_user, message)
-                    else:
-                        # Remove connection from pool
-                        remove(new_user)
-                except:
-                    continue
-        except:
-            print("connection closed by client")
-            new_user.active = False
-            remove(new_user)
+        self.login_list[message[2]] = connection
+        logins = 'login'
+        logins += '|wrong password/username' + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
 
-
-def sendMessage(new_user, message):
-    """ Send Message """
-    # Print message and user who sent it
-    print("<" + new_user.username + "> " + message)
-    # Calls broadcast function to send message to all
-    message_to_send = "<" + new_user.username + "> " + message
-    broadcast(message_to_send, new_user)
-
-
-def remove(new_user):
-    """ Remove client from pool of other clients"""
-    if new_user in list_of_clients:
-        list_of_clients.remove(new_user)
-
-
-def broadcast(message, new_user):
-    """ Broadcast a message to all connected clients """
-
-    print("Broadcasting msg: " + message)
-
-    print('broadcasing message')
-    for clients in list_of_clients:
-        print('looping through clients')
-        if clients != new_user.conn:
-            try:
-                clients.send(message.encode(ENCODING))
-            except:
-                clients.close()
-                # if the link is broken, we remove the client
-                remove(clients)
-
-
-def direct(message, new_user):
-    """ Send a message to a user if you are friends with them"""
-    # Check if users are friends
-    if checkFriends(new_user, new_user.dm):
-        # Users are friends
-        for clients in list_of_clients:
-            try:
-                # Make sure we are only messaging the client/friend
-                if clients.username == new_user.dm and clients.username != new_user.username:
-                    clients.send(message.encode(ENCODING))
-            except:
-                clients.conn.close()
-                remove(clients)
+def processRegister(self, data, connection):
+    """ Helper to process registration transactions"""
+    auth = register(self, True, data)
+    message = data.split("|")
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[3]] = connection
+        print(message[3] + ' has registered')
+        # Updating login list
+        self.update_login_list()
     else:
-        new_user.conn.send("You are not friends with the user, you need to be in order to message them")
+        self.login_list[message[3]] = connection
+        logins = 'register'
+        logins += '|' + auth + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
 
+def processForgot(self, data, connection):
+    """ Helper function to process password reset transactions"""
+    auth = forgot(self, True, data)
+    message = data.split("|")
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[2]] = connection
+        print(message[2] + ' has reset password')
+        # Updating login list
+        self.update_login_list()
+    else:
+        self.login_list[message[2]] = connection
+        logins = 'forgot'
+        logins += '|' + auth + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
+def processLogout(self, data, connection):
+    """ Helper to process logout transactions"""
+    # Logs the user out
+    message = data.split("|", 4)
+    self.connection_list.remove(self.login_list[message[2]])
+    if message[2] in self.login_list:
+        del self.login_list[message[2]]
+    print(message[2] + ' has logged out')
+    self.update_login_list()
+
+def processAddFriend(self, data, connection):
+    """ Helper function to process adding friends """
+    # GUI|addFriend|username|friendname
+    auth = addFriend(data.split('|')[2], data.split('|')[3], True)
+    message = data.split("|")
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[2]] = connection
+        print(message[2] + ' has sent a friend request')
+        # Updating login list
+        self.update_login_list()
+    else:
+        self.login_list[message[2]] = connection
+        logins = 'addFriend'
+        logins += '|' + auth + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
+def processRemoveFreind(self, data, connection):
+    """ Helper to remove friends"""
+    # GUI|removeFriend|username|friendname
+    auth = removeFriend(data.split('|')[2], data.split('|')[3], True)
+    message = data.split("|")
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[2]] = connection
+        print(message[2] + ' has sent a friend request')
+        # Updating login list
+        self.update_login_list()
+    else:
+        self.login_list[message[2]] = connection
+        logins = 'removeFriend'
+        logins += '|' + auth + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
+def processViewFriends(self, data, connection):
+    """ Helper to view friends"""
+    # GUI|viewFriends|username
+    auth = viewFriends(data.split('|')[2])
+    message = data.split("|")
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[2]] = connection
+        print(message[2] + ' has sent a friend request')
+        # Updating login list
+        self.update_login_list()
+    else:
+        self.login_list[message[2]] = connection
+        logins = 'viewFriends'
+        logins += '|' + auth + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
+def processViewSentRequests(self, data, connection):
+    """ helper to view sent requests"""
+    # GUI|viewSentRequests|username
+    auth = viewSentPendingRequests(data.split('|')[2])
+    message = data.split("|")
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[2]] = connection
+        print(message[2] + ' has sent a friend request')
+        # Updating login list
+        self.update_login_list()
+    else:
+        self.login_list[message[2]] = connection
+        logins = 'viewSentRequests'
+        logins += '|' + auth + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
+def processViewPendingRequests(self, data, connection):
+    """ Helper to view pending requests """
+    # GUI|viewPendingRequests|username
+    auth = viewPendingRequests(data.split('|')[2])
+    message = data.split("|")
+    if "successful" in auth:
+        # Update username in login list
+        self.login_list[message[2]] = connection
+        print(message[2] + ' has sent a friend request')
+        # Updating login list
+        self.update_login_list()
+    else:
+        self.login_list[message[2]] = connection
+        logins = 'viewPendingRequests'
+        logins += '|' + auth + '\n'
+        self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
+#def process(new_user, addr, usingGUI=False, data=None):
+#    """ Sends a message to the client who'S user is conn """
+#    # Handle GUI commands different from terminal
+#    if usingGUI:
+#        # Use a splitting method when sending the data through
+#        # First param is what method we are going to do
+#        method = data.split("|")[0]
+#        print("method: " + method)
+#
+#        allData = data.split('|')
+#        print('split this')
+#        method = allData[1]
+#        print('method: ' + method)
+#
+#        if method == 'login':
+#            # GUI|login|username|password
+#            login(new_user, True, data)
+#        elif method == 'register':
+#            # GUI|register|name|username|email|password
+#            register(new_user, True, data)
+#        elif method == "forgot":
+#            # GUI|forgot|password
+#            forgot(new_user, True, data)
+#        elif method == "logout":
+#            # GUI|logout
+#            logout(new_user, list_of_clients)
+#        elif method == 'checkUsername':
+#            # GUI|checkUsername|username
+#            checkUsername(data.split('|')[1])
+#        elif method == 'checkEmail':
+#            # GUI|checkEmail|email
+#            checkEmail(data.split('|')[1])
+#        elif method == 'msg':
+#            # GUI|msg|message # Broadcast
+#            # GUI|msg|user|message # Selected user
+#            sendMessage(new_user, data.split('|')[2:])
+#        elif method == 'addFriend':
+#            # GUI|addFriend|target
+#            addFriend(new_user, data, True)
+#        elif method == 'removeFriend':
+#            # GUI|removeFriend|target
+#            removeFriend(new_user, data, True)
+#        elif method == 'viewFriends':
+#            # GUI|viewFriends
+#            viewFriends(new_user, True)
+#        elif method == 'viewSentRequests':
+#            # GUI|viewSentRequests
+#            viewSentPendingRequests(new_user)
+#        elif method == 'viewRequests':
+#            # GUI|viewRequests
+#            viewRequests(new_user)
+#        elif method == 'viewFriends':
+#            # GUI|viewFriends
+#            viewFriends(new_user)
+#
+#    else:
+#       print('in terminal?')
+#       try:
+#           # Handle Terminal Commands
+#           new_user.conn.send("Welcome to this chat room!".encode(ENCODING))
+#           while True:
+#               try:
+#                   message = new_user.conn.recv(2048)
+#                   if message:
+#                       # Process the message that the user sent for commands
+#                       if " " in message:
+#                           msg = message.split(" ")
+#                           if msg == "help" or msg == "-h":
+#                               helpMenu(new_user)
+#                               continue
+#                           elif msg == "quit":
+#                               quit()
+#                               continue
+#                           elif msg == "addfriend":
+#                               if msg[1] == "":
+#                                   new_user.conn.send("You must use the friends username to add them")
+#                               addFriend(new_user, msg[1])
+#                               continue
+#                           elif msg == "removefriend":
+#                               if msg[1] == "":
+#                                   new_user.conn.send("You must use the friends username to remove them")
+#                               removeFriend(new_user, msg[1])
+#                               continue
+#                           elif msg == "viewfriends":
+#                               v = viewFriends(new_user)
+#                               for x in v:
+#                                   new_user.conn.send(str(x).encode(ENCODING))
+#                                   continue
+#                           elif msg == "direct":
+#                               if msg[1] == "":
+#                                   new_user.conn.send("You must use the friends username to direct them")
+#                                   # Send friend a message that you want to direct them
+#                                   new_user.conn.send("You are now in direct mode with " + msg[1])
+#                                   # Send notification to friend
+#                               continue
+#                           elif msg == "broadcast":
+#                               new_user.dm = ""
+#                               new_user.conn.send("You are not in broadcast mode")
+#                           else:
+#                               sendMessage(new_user, message)
+#                           sendMessage(new_user, message)
+#                   else:
+#                       # Remove connection from pool
+#                       remove(new_user)
+#               except:
+#                   continue
+#       except:
+#           print("connection closed by client")
+#           new_user.active = False
+#           remove(new_user)
+
+#def sendMessage(new_user, message):
+#    """ Send Message """
+#    # Print message and user who sent it
+#    print("<" + new_user.username + "> " + message)
+#    # Calls broadcast function to send message to all
+#    message_to_send = "<" + new_user.username + "> " + message
+#    broadcast(message_to_send, new_user)
+
+
+#def remove(new_user):
+#    """ Remove client from pool of other clients"""
+#    if new_user in list_of_clients:
+#        list_of_clients.remove(new_user)
+
+
+# todo do we need this still?
+#def broadcast(message, new_user):
+#    """ Broadcast a message to all connected clients """
+#
+#    print("Broadcasting msg: " + message)
+#
+#    print('broadcasing message')
+#    for clients in list_of_clients:
+#        print('looping through clients')
+#        if clients != new_user.conn:
+#            try:
+#                clients.send(message.encode(ENCODING))
+#            except:
+#                clients.close()
+#                # if the link is broken, we remove the client
+#                remove(clients)
+
+# todo do we need this still?
+#def direct(message, new_user):
+#    """ Send a message to a user if you are friends with them"""
+#    # Check if users are friends
+#    if checkFriends(new_user, new_user.dm):
+#        # Users are friends
+#        for clients in list_of_clients:
+#            try:
+#                # Make sure we are only messaging the client/friend
+#                if clients.username == new_user.dm and clients.username != new_user.username:
+#                    clients.send(message.encode(ENCODING))
+#            except:
+#                clients.conn.close()
+#                remove(clients)
+#    else:
+#        new_user.conn.send("You are not friends with the user, you need to be in order to message them")
 
 def checkFriends(new_user, usernameOfFriend):
     """ Check if users are friends or not"""
@@ -210,7 +352,7 @@ def addFriend(new_user, friendReq, usingGUI=False):
     if viewP != []:
         # You already sent a request to this user
         if usingGUI:
-            new_user.conn.send("REQUEST_SENT".encode(ENCODING))
+            return "REQUEST SENT"
         else:
             new_user.conn.send("You already sent a request to this user".encode(ENCODING))
         return False
@@ -221,7 +363,7 @@ def addFriend(new_user, friendReq, usingGUI=False):
         add_item(FRIENDSHIP, new_user.username + ";" + friendReq)
         # Let the user know the friend request has been approved
         if usingGUI:
-            new_user.conn.send("FRIEND_APPROVED".encode(ENCODING))
+            return "FRIEND APPROVED"
         else:
             new_user.conn.send("Friend request approved".encode(ENCODING))
         return True
@@ -230,7 +372,7 @@ def addFriend(new_user, friendReq, usingGUI=False):
     for line in viewF:
         if friendReq in line:
             if usingGUI:
-                new_user.conn.send("FRIENDS".encode(ENCODING))
+                return "FRIENDS"
             else:
                 new_user.conn.send("You are already friends".encode(ENCODING))
             return True
@@ -248,7 +390,7 @@ def addFriend(new_user, friendReq, usingGUI=False):
                     new_user.conn.send("There was an error sending your friend request".encode(ENCODING))
                     return False
         if usingGUI:
-            new_user.conn.send("REQUEST_SENT".encode(ENCODING))
+            return "REQUEST SENT"
         else:
             new_user.conn.send("Friend request sent to " + friendReq)
         return True
@@ -259,7 +401,7 @@ def removeFriend(new_user, friend, usingGUI=False):
     remove_friend(FRIENDSHIP, new_user.username, friend)
     remove_friend(PENDING, new_user.username, friend)
     if usingGUI:
-        new_user.conn.send("FRIEND_REMOVED".encode(ENCODING))
+        return "FRIEND REMOVED"
     else:
         new_user.conn.send("You have removed " + friend.encode(ENCODING))
     return True
@@ -278,43 +420,43 @@ def viewFriends(user, usernameToSearch=None):
 
     else:
         friendsList = search_file(FRIENDSHIP, user.username)
-        prepare = []
+        prepare = ""
         i = 0
         if friendsList == []:
-            prepare.append("You currently have no friends to display")
+            prepare = "You currently have no friends to display"
             return prepare
         else:
             s = ""
             if len(friendsList) > 1:
                 s = "s"
-            prepare.append("You have " + str(len(friendsList)) + " friend" + s)
+            prepare += "You have " + str(len(friendsList)) + " friend" + s +"\n"
         for friend in friendsList:
             i = i + 1
-            prepare.append(str(i) + ": " + friend)
+            prepare += str(i) + ": " + friend
         return prepare
 
 
-def viewSentPendingRequests(new_user):
+def viewSentPendingRequests(username):
     """ View all requests i sent which are pending friend requests"""
     # Get all my pending friend requests
-    pending = []
-    view = search_file(PENDING, new_user.username)
+    pending = ""
+    view = search_file(PENDING, username)
     for line in view:
         f = line.split(';')
-        if f[0] == new_user.username:  # This is the person who sent the request
-            pending.append(f[1])
+        if f[0] == username:  # This is the person who sent the request
+            pending += str((f[1])) + "\n"
     return pending
 
 
-def viewPendingRequests(new_user):
+def viewPendingRequests(username):
     """ View all my pending friend requests"""
     # Get all my pending friend requests
-    pending = []
-    view = search_file(PENDING, new_user.username)
+    pending = ""
+    view = search_file(PENDING, username)
     for line in view:
         f = line.split(';')
-        if f[1] == new_user.username:  # This is the requestee
-            pending.append(f[0])
+        if f[1] == username:  # This is the requestee
+            pending += str((f[0])) + '\n'
     return pending
 
 
@@ -358,11 +500,14 @@ def login(new_user, usingGUI=False, data=None):
             new_user.email = email
             new_user.active = True
             try:
-                new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
+                return "successful"
+                #new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
             except:
                 print('There was an error for: ' + new_user.username)
         else:
-            new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
+            """ trying something different"""
+            return "FAILED"
+           #new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     else:
         tryAgain = True
         while tryAgain:
@@ -414,20 +559,20 @@ def forgot(new_user, usingGUI=False, data=None):
         email = data.split('|')[2]
         password = data.split('|')[3]
         userFound = search_file(REGISTER, email)
+        #print('userfound: ' + str(userFound))
         if len(userFound) > 0:
-            userFound = userFound[0][0]# Make sure its a string
+            userFound = userFound[0]# Make sure its a string
+            #print('userfound2: ' + str(userFound))
             # User found, lets change password (we should probably do this a different more secure way_
             # username + "|" + email + "|" + fullName + "|" + password
-            username = userFound.split('|')[0]
-            email = userFound.split('|')[1]
-            name = userFound.split('|')[2]
-            remove_item(REGISTER, userFound)
+            username = userFound[0]
+            email = userFound[1]
+            name = userFound[2]
+            remove_item(REGISTER, username + "|" + email + "|" + name)
             add_item(REGISTER, username + "|" + email + "|" + name + "|" + password)
-            new_user.conn.send("SUCCESS_FORGOT_PASS".encode(ENCODING))
-            return
+            return "successful"
         else:
-            new_user.conn.send("Could not change password at this time".encode(ENCODING))
-            return
+            return "Could not change password at this time"
     else:
         retry = True
         while retry:
@@ -503,22 +648,18 @@ def register(new_user, usingGUI=False, data=None):
         # Check the username
         check = checkUsername(username)
         if not check:
-            new_user.conn.send("Username cannot be used (a-z0-9)".encode(ENCODING))
-            return False
+            return "Username cannot be used (a-z0-9)"
         # Check if email is in use
         check2 = checkEmail(email)
         if not check2:
-            new_user.conn.send("Email is in use or not valid".encode(ENCODING))
-            return False
+            return "Email is in use or not valid"
         # Check password
         if len(password) < 6:
-            new_user.conn.send('password needs to be greater than 6 characters'.encode(ENCODING))
+            return "password needs to be greater than 6 characters"
         # Allow registration
         # If everything is okay, lets save everything and append to file
         add_item(REGISTER, username + "|" + email + "|" + name + "|" + password+'\n')
-        new_user.conn.send("You are now registered, login now".encode(ENCODING))
-        return True
-
+        return "successful"
     else:
         tryAgain = True
         while tryAgain:
@@ -615,9 +756,9 @@ def search_file(GLOBAL_VAR, search):
     f = []
     try:
         for line in fp.readlines():
-            li = line.split(';')
+            li = line.split('|')
             for x in li:
-                if search in x:
+                if x == search:
                     f.append(li)
     except:
         return []
@@ -632,7 +773,7 @@ def remove_item(GLOBAL_VAR, search):
 
     f = open(GLOBAL_VAR, "w")
     for line in lines:
-        if not search in line:
+        if search not in line:
             f.write(line)
     f.close()
 

@@ -3,16 +3,17 @@ import tkinter as tk
 from tkinter import messagebox
 import tkinter.scrolledtext as tkst
 from PIL import Image, ImageTk
+import threading
+import select
 import os
 
 ENCODING = 'utf-8'
 HOST = 'localhost'
 PORT = 8080
 
-
 class PyChatApp(tk.Tk):
-    def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+    def __init__(self):
+        tk.Tk.__init__(self)
         # Set the title of the app
         self.title = "PyChat"
         self.wm_title("PyChat")
@@ -32,13 +33,15 @@ class PyChatApp(tk.Tk):
         self.exit_event = False
         self.connected = self.connect_to_server()
         self.buffer_size = 1024
+        self.username = None
         self.target = None
+        self.messageBox = None
+        self.loginList = None
+        self.lock = threading.RLock()
 
         # Check for client to exit
         if self.exit_event:
             exit()
-        # Send data to server to let it know we are doing a GUI
-        # self.sock.send("GUI".encode(ENCODING))
 
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible
@@ -58,18 +61,109 @@ class PyChatApp(tk.Tk):
         # Show login first
         self.show_frame("LoginPage")
 
+    def setUsername(self, username):
+        username = username.replace('\n', '')
+        self.username = username
+
+    def getUsername(self):
+        return self.username
+
+    def setTarget(self, target):
+        target = target.replace('\n', '')
+        self.target = target
+
+    def getTarget(self):
+        return self.target
+
+    def setMessageBox(self, msgBox):
+        self.messageBox = msgBox
+
+    def getMessageBox(self):
+        return self.messageBox
+
+    def setLoginList(self, log):
+        self.loginList = log
+
+    def getLoginList(self):
+        return self.loginList
+
+    def update_login_list(self, active_users):
+        """Update listbox with list of active users"""
+        login_list = self.getLoginList()
+        login_list.delete(0, tk.END)
+        for user in active_users:
+            login_list.insert(tk.END, user)
+        login_list.select_set(0)
+        self.target = login_list.get(login_list.curselection())
+
     def on_closing_event(self):
+        print('closing event now')
         """ Let the server know that we are logging off"""
         try:
-            self.sock.send("GUI|logout".encode(ENCODING))
+            message = "GUI|logout|" + self.username
+            self.sock.send(message.encode(ENCODING))
             self.sock.close()
-            exit()
-        except:
+        except socket.error:
+            print('there was an error sending logout')
+        finally:
             exit()
 
     def set_target(self, target):
         """Set target for messages"""
         self.target = target
+
+    def run(self):
+        inputs = [self.sock]
+        outputs = [self.sock]
+        while inputs:
+            try:
+                read, write, exceptional = select.select(inputs, outputs, inputs)
+            # if server unexpectedly quits, this will raise ValueError exception (file descriptor < 0)
+            except ValueError:
+                print('Server error')
+                display_alert('Server error has occurred. Exit app')
+                self.controller.sock.close()
+                break
+
+            if self.sock in read:
+                with self.lock:
+                    try:
+                        data = self.sock.recv(self.buffer_size)
+                    except socket.error:
+                        print("Socket error")
+                        display_alert('Socket error has occurred. Exit app')
+                        self.sock.close()
+                        break
+
+                self.process_received_data(data)
+
+            if self.sock in exceptional:
+                print('Server error')
+                display_alert('Server error has occurred. Exit app')
+                self.sock.close()
+                break
+
+    def process_received_data(self, data):
+        """Process received message from server"""
+        print('got data from server: ' + str(data))
+        data = data.decode(ENCODING)
+        data = data.split('|', 4)
+
+        method = data[1]
+
+        # Process the method
+        if method == 'msg':
+            text = '<' + data[2] + '> ' + data[4]
+            with self.lock:
+                messagebox = self.getMessageBox()
+                messagebox.configure(state='normal')
+                messagebox.insert(tk.END, text)
+                messagebox.configure(state='disabled')
+                messagebox.see(tk.END)
+        elif method == 'login_list':
+            users = data[2]
+            processed = users.split(';')
+            self.update_login_list(processed)
 
     def connect_to_server(self):
         """Connect to server via socket interface, return (is_connected)"""
@@ -133,14 +227,12 @@ class ForgotPassPage(tk.Frame):
         self.password2.insert(0, 'Password')
         self.password2.pack(side="top", fill="x", pady=5)
         # Change password button
-        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff',
-                                  activeforeground='white', foreground='white', command=self.forgot)
+        forgotPassBtn = tk.Button(self, text='Forgot Password', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.forgot)
         forgotPassBtn.pack(side="top", fill="x", pady=(40, 10))
         loginBtn = tk.Button(self, text='Login', command=lambda: self.controller.show_frame("LoginPage"))
         loginBtn.pack(side="top", fill="x", pady=(5, 5))
         # button.bind('<Button-1>', self.get_register_event)
-        registerBtn = tk.Button(self, text='Register', borderwidth=0,
-                                command=lambda: self.controller.show_frame("RegisterPage"))
+        registerBtn = tk.Button(self, text='Register', borderwidth=0, command=lambda: self.controller.show_frame("RegisterPage"))
         registerBtn.pack(side="top", fill="x", pady=(5, 10))
 
     def forgot(self):
@@ -152,25 +244,24 @@ class ForgotPassPage(tk.Frame):
             data = "GUI|forgot|" + email + "|" + password
             self.controller.sock.send(data.encode(ENCODING))
             data = self.controller.sock.recv(1024).decode(ENCODING)
-            if data == "SUCCESS_FORGOT_PASS":
+            print('got data: ' + data)
+            if "all" in data:
                 display_alert("Password has been changed!")
             else:
-                display_alert("There was an error changing your password.")
+                display_alert(str(data.split('|')[1]))
         else:
             display_alert("Passwords did not match!")
 
 
 class ChatPage(tk.Frame):
     """ Chat Page"""
-
     def __init__(self, parent, controller):
         self.parent = parent
         self.controller = controller
-        self.entry = None
         self.login = None
+        self.entry = None
         self.messagebox = None
         self.target = None
-
         tk.Frame.__init__(self, self.parent)
 
     def build(self):
@@ -202,21 +293,22 @@ class ChatPage(tk.Frame):
 
         # ScrolledText widget for displaying messages
         self.messages_list = tkst.ScrolledText(frame00, wrap=tk.WORD, height=20)
-        self.messages_list.insert(tk.END, 'Welcome to Python Chat\n')
+        self.messages_list.insert(tk.END, 'Welcome to Python Chat, ' + self.controller.getUsername() + '\n')
         self.messages_list.configure(state='disabled')
+        self.controller.setMessageBox(self.messages_list)
 
         # Listbox widget for displaying active users and selecting them
         self.logins_list = tk.Listbox(frame01, selectmode=tk.SINGLE, exportselection=False)
         self.logins_list.bind('<<ListboxSelect>>', self.selected_login_event)
+        self.controller.setLoginList(self.logins_list)
 
         # Entry widget for typing messages in
-        self.entry = tk.Text(self.messagebox)
+        self.entry = tk.Text(self.messagebox, height=10)
         self.entry.focus_set()
         self.entry.bind('<Return>', self.send_entry_event)
 
         # Button widget for sending messages
-        self.send_button = tk.Button(frame03, text='Send')
-        self.send_button.bind("<Return>", self.send_entry)
+        self.send_button = tk.Button(frame03, text='Send', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=lambda: self.send_entry_event)
 
         # Positioning widgets in frame
         self.messages_list.pack(fill=tk.BOTH, expand=tk.YES)
@@ -224,34 +316,27 @@ class ChatPage(tk.Frame):
         self.entry.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
         self.send_button.pack(side=tk.RIGHT, fill=tk.BOTH, expand=tk.YES)
 
-    def send_entry(self):
-        tm = self.entry.get()
-        msg = "GUI|" + tm
-        self.controller.sock.send(msg.encode(ENCODING))
-        self.entry.delete(0, 'end')
+        # Send request for current users
+        self.controller.sock.send("update_login_list".encode(ENCODING))
+
+        # Run listeners for getting messages and other data from server at all times
+        mythread = threading.Thread(target=self.controller.run)
+        mythread.daemon = True
+        mythread.start()
 
     def selected_login_event(self, event):
         """Set as target currently selected login on login list"""
         target = self.logins_list.get(self.logins_list.curselection())
+        self.controller.setTarget(target)
         self.target = target
-
-    def update_login_list(self, active_users):
-        """Update listbox with list of active users"""
-        self.logins_list.delete(0, tk.END)
-        for user in active_users:
-            self.logins_list.insert(tk.END, user)
-        self.logins_list.select_set(0)
-        self.target = self.logins_list.get(self.logins_list.curselection())
 
     def send_entry_event(self, event):
         """Send message from entry field to target"""
         text = self.entry.get(1.0, tk.END)
         if text != '\n':
-            print('text: ' + text)
-            message = 'GUI|msg'
-            if self.target != None:
-                message += '|' + self.target
-            message += '|' + text[:-1]
+            if self.controller.getTarget() == None:
+                self.controller.setTarget("all")
+            message = 'GUI|msg|' + self.controller.getUsername() + '|' + self.controller.getTarget() + '|' + text[:-1]
             print(message)
             self.controller.sock.send(message.encode(ENCODING))
             self.entry.mark_set(tk.INSERT, 1.0)
@@ -259,6 +344,22 @@ class ChatPage(tk.Frame):
             self.entry.focus_set()
         else:
             messagebox.showinfo('Warning', 'You must enter non-empty message')
+
+        with self.controller.lock:
+            self.messages_list.configure(state='normal')
+            if text != '\n':
+                self.messages_list.insert(tk.END, text)
+            self.messages_list.configure(state='disabled')
+            self.messages_list.see(tk.END)
+
+    def display_message(self, message):
+        """Display message in ScrolledText widget"""
+        with self.controller.lock:
+            message = '< ' + self.controller.getUsername + '> ' + message
+            self.messages_list.configure(state='normal')
+            self.messages_list.insert(tk.END, message)
+            self.messages_list.configure(state='disabled')
+            self.messages_list.see(tk.END)
 
 
 class LoginPage(tk.Frame):
@@ -291,22 +392,22 @@ class LoginPage(tk.Frame):
         self.password = tk.Entry(self, width=20, text='Password', show='*')
         self.password.insert(0, 'Password')
         self.password.pack(side="top", fill="x", pady=5)
+        self.password.bind('<Return>', self.get_login_event)
+
         # Login Button
-        loginBtn = tk.Button(self, text='Login', bg='#0084ff', activebackground='#0084ff', activeforeground='white',
-                             foreground='white', command=self.get_login_event)
+        loginBtn = tk.Button(self, text='Login', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.get_login_event)
         loginBtn.pack(side="top", fill="x")
         # Register Button
         registerBtn = tk.Button(self, text='Register', command=lambda: self.controller.show_frame("RegisterPage"))
         registerBtn.pack(side="top", fill="x")
         # Forgot button
-        forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0,
-                              command=lambda: self.controller.show_frame("ForgotPassPage"))
+        forgotBtn = tk.Button(self, text='Forgot Password', borderwidth=0, command=lambda: self.controller.show_frame("ForgotPassPage"))
         forgotBtn.pack(side="top", fill="x")
         # Copy right
         copy = tk.Label(self, text='PyChat © 2018', width=20)
         copy.pack(side="top", fill="x", pady=(100, 10))
 
-    def get_login_event(self):
+    def get_login_event(self, event=None):
         """ Check login for correct info"""
         print('clicking login')
         # Get variables
@@ -326,7 +427,9 @@ class LoginPage(tk.Frame):
         data = self.controller.sock.recv(1024).decode(ENCODING)
         print('data: ' + data)
         # Call chatPage layout if server accepts connection
-        if data == "LOGIN_SUCCESS":
+        if not "wrong password/username" in data:
+            print('user: ' + data.split('|')[1] + ' has logged in')
+            self.controller.setUsername(self.email.get())
             self.controller.show_frame("ChatPage")
         else:
             display_alert("Incorrect Email/Password")
@@ -377,9 +480,10 @@ class RegisterPage(tk.Frame):
         self.password = tk.Entry(self, width=20, text='Password', show='*')
         self.password.insert(0, 'Password')
         self.password.pack(side="top", fill="x", pady=5)
+        self.password.bind('<Return>', self.get_register_event)
+
         # Register button
-        registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff',
-                                activeforeground='white', foreground='white', command=self.get_register_event)
+        registerBtn = tk.Button(self, text='Register', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=self.get_register_event)
         registerBtn.pack(side="top", fill="x")
 
         # Login button
@@ -393,7 +497,7 @@ class RegisterPage(tk.Frame):
         copy = tk.Label(self, text='PyChat © 2018', width=20)
         copy.pack(side="top", fill="x", pady=(90, 10))
 
-    def get_register_event(self):
+    def get_register_event(self, event=None):
         """ Send register data """
         # Get variables
         name = self.name.get()
@@ -406,14 +510,15 @@ class RegisterPage(tk.Frame):
         self.controller.sock.send(dataToSend.encode(ENCODING))
 
         # send error to user or to server
-        data = self.controller.sock.recv(1024)
+        data = self.controller.sock.recv(1024).decode(ENCODING)
         # Call chatPage layout if server accepts connection
-        if data == "REGISTER_SUCCESS":
+        if "all" in str(data):
             """If registration is a success go to login page, then log the person in"""
             display_alert("Successfully registered, Please click login")
             self.controller.show_frame("LoginPage")
         else:
-            display_alert(data)
+            print("data: " + data)
+            display_alert(data.split('|')[1])
 
 
 if __name__ == "__main__":
