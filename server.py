@@ -28,6 +28,7 @@ listens for 100 active connections. This number can be
 increased as per convenience.
 """
 server.listen(100)
+server.setblocking(False)
 
 # todo fix this
 while True:
@@ -39,6 +40,7 @@ while True:
     try:
         print('about to accept')
         conn, addr = server.accept()
+        conn.setblocking(False)
         # Create a new user
         getGUI = None
         print('creating new user?')

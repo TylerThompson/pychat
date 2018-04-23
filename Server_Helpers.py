@@ -59,7 +59,7 @@ def clientthread(new_user, addr, usingGUI=False, data=None):
         elif method == 'msg':
             # GUI|msg|message # Broadcast
             # GUI|msg|user|message # Selected user
-            sendMessage(new_user, data.split('|')[1])
+            sendMessage(new_user, data.split('|')[2:])
         elif method == 'addFriend':
             # GUI|addFriend|target
             addFriend(new_user, data, True)
@@ -153,8 +153,12 @@ def remove(new_user):
 
 def broadcast(message, new_user):
     """ Broadcast a message to all connected clients """
+
     print("Broadcasting msg: " + message)
+
+    print('broadcasing message')
     for clients in list_of_clients:
+        print('looping through clients')
         if clients != new_user.conn:
             try:
                 clients.send(message.encode(ENCODING))
@@ -353,7 +357,10 @@ def login(new_user, usingGUI=False, data=None):
             new_user.fullname = fullName
             new_user.email = email
             new_user.active = True
-            new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
+            try:
+                new_user.conn.send("LOGIN_SUCCESS".encode(ENCODING))
+            except:
+                print('There was an error for: ' + new_user.username)
         else:
             new_user.conn.send("Login information incorrect, please try again".encode(ENCODING))
     else:
