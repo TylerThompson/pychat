@@ -6,9 +6,6 @@ import threading
 
 ENCODING = 'utf-8'
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect(("localhost", 8080))
-
 '''There are two possible input situations. Either the
       user wants to give  manual input to send to other people,
       or the server is sending a message  to be printed on the
@@ -17,28 +14,37 @@ server.connect(("localhost", 8080))
       to send a message, then the if condition will hold true
       below.If the user wants to send a message, the else
       condition will evaluate as true'''
-while True:
+from socket import *
+from time import sleep
+
+# Create a socket and connect to the server
+serverName = "127.0.0.1"  # Use IP address of server
+serverPort = 8080
+clientSocket = socket(AF_INET, SOCK_STREAM)
+clientSocket.connect((serverName, serverPort))
+
+# Sign up or login
+while 1:
     try:
-        # maintains a list of possible input streams
-        sockets_list = [socket.socket(), server]
-        print("hello")
-        read_sockets, write_socket, error_socket = select.select(sockets_list, [], [])
-        time.sleep(5)
-
-        for socks in write_socket:
-            print('socks: ')
-            if socks == server:
-                message = socks.recv(2048)
-                print(message.decode(ENCODING))
-            else:
-                message = input('Enter a message: ')
-                print("<You> " + message)
-                server.send(message.encode(ENCODING))
-
-        for socks in read_sockets:
-            print('reading sockets')
-
-        for socks in error_socket:
-            print('error in socket')
+        # Listen to response from server and respond to it
+        response = clientSocket.recv(1024).decode(ENCODING)
+        if "Error" in response or "Successful" in response:
+            # Print out any error or congrats messages
+            print(response)
+        else:
+            # Allow for user to input any responses needed
+            request = input(response)
+            if "quit" in request:
+                # Allow for user to quit at anytime
+                clientSocket.close()
+                exit()
+            # Send information to the server
+            clientSocket.send(request.encode(ENCODING))
+            sleep(1)
+            request = ''
     except:
-        print('It seems that the server has closed connection')
+        # Let user know if there are any issues with processing requests
+        print("There was an error")
+        # Close socket if major error occurs (server disconnecting)
+        clientSocket.close()
+        exit()
