@@ -1,11 +1,13 @@
 import socket
 import select
 import time
+import queue
+import threading
 
 ENCODING = 'utf-8'
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.connect(("127.0.0.1", 8080))
+server.connect(("localhost", 8080))
 
 '''There are two possible input situations. Either the
       user wants to give  manual input to send to other people,
@@ -20,17 +22,23 @@ while True:
         # maintains a list of possible input streams
         sockets_list = [socket.socket(), server]
         print("hello")
-        read_sockets, write_socket, error_socket = select(sockets_list, [], [])
+        read_sockets, write_socket, error_socket = select.select(sockets_list, [], [])
         time.sleep(5)
 
-        for socks in read_sockets:
+        for socks in write_socket:
+            print('socks: ')
             if socks == server:
                 message = socks.recv(2048)
                 print(message.decode(ENCODING))
             else:
-                message = input()
+                message = input('Enter a message: ')
                 print("<You> " + message)
                 server.send(message.encode(ENCODING))
+
+        for socks in read_sockets:
+            print('reading sockets')
+
+        for socks in error_socket:
+            print('error in socket')
     except:
         print('It seems that the server has closed connection')
-

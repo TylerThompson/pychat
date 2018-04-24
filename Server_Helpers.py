@@ -18,10 +18,11 @@ class User:
     active = False
     dm = None  # Person who we are currently dming (if no one, then we are broadcasting)
 
-#def helpMenu(new_user):
-#    """ Display the help menu if a user gets stuck """
-#    helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
-#    new_user.conn.send(helpCmds.encode(ENCODING))
+def helpMenu(new_user):
+    """ Display the help menu if a user gets stuck """
+    helpCmds = "List of possible commands:\n\t View friends \n\t Add Friend \n\t Remove Friend \n\t Direct Message / DM \n\t Boradcast \n\t Quit \n\t Help / --h "
+    new_user.conn.send(helpCmds.encode(ENCODING))
+
 
 # Helper functions for processing data
 def processLogin(self, data, connection):
@@ -40,6 +41,7 @@ def processLogin(self, data, connection):
         logins += '|wrong password/username' + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
 
+
 def processRegister(self, data, connection):
     """ Helper to process registration transactions"""
     auth = register(self, True, data)
@@ -55,6 +57,7 @@ def processRegister(self, data, connection):
         logins = 'register'
         logins += '|' + auth + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
 
 def processForgot(self, data, connection):
     """ Helper function to process password reset transactions"""
@@ -72,6 +75,7 @@ def processForgot(self, data, connection):
         logins += '|' + auth + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
 
+
 def processLogout(self, data, connection):
     """ Helper to process logout transactions"""
     # Logs the user out
@@ -81,6 +85,7 @@ def processLogout(self, data, connection):
         del self.login_list[message[2]]
     print(message[2] + ' has logged out')
     self.update_login_list()
+
 
 def processAddFriend(self, data, connection):
     """ Helper function to process adding friends """
@@ -99,6 +104,7 @@ def processAddFriend(self, data, connection):
         logins += '|' + auth + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
 
+
 def processRemoveFreind(self, data, connection):
     """ Helper to remove friends"""
     # GUI|removeFriend|username|friendname
@@ -115,6 +121,7 @@ def processRemoveFreind(self, data, connection):
         logins = 'removeFriend'
         logins += '|' + auth + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
 
 def processViewFriends(self, data, connection):
     """ Helper to view friends"""
@@ -133,6 +140,7 @@ def processViewFriends(self, data, connection):
         logins += '|' + auth + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
 
+
 def processViewSentRequests(self, data, connection):
     """ helper to view sent requests"""
     # GUI|viewSentRequests|username
@@ -149,6 +157,7 @@ def processViewSentRequests(self, data, connection):
         logins = 'viewSentRequests'
         logins += '|' + auth + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
 
 def processViewPendingRequests(self, data, connection):
     """ Helper to view pending requests """
@@ -485,13 +494,16 @@ def login(new_user, usingGUI=False, data=None):
         except:
             f = open(REGISTER, 'w')
         # Read lines to see if user exists
-        for line in f.readlines():
-            if username in line and password in line:
-                # User exists allow user to login
-                exists = True
-                username = line[0]
-                email = line[1]
-                fullName = line[2]
+        try:
+            for line in f.readlines():
+                if username in line and password in line:
+                    # User exists allow user to login
+                    exists = True
+                    username = line[0]
+                    email = line[1]
+                    fullName = line[2]
+        except:
+            return "You need to register first"
         f.close()
         if exists:
             # Create user object
