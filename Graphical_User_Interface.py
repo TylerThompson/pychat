@@ -169,13 +169,14 @@ class PyChatApp(tk.Tk):
 
         # Process the method
         if method == 'msg':
-            text = '<' + data[2] + '> ' + data[4]
-            with self.lock:
-                messagebox = self.getMessageBox()
-                messagebox.configure(state='normal')
-                messagebox.insert(tk.END, text)
-                messagebox.configure(state='disabled')
-                messagebox.see(tk.END)
+            if data[2] != self.getUsername():
+                text = '<' + data[2] + '> ' + data[4]
+                with self.lock:
+                    messagebox = self.getMessageBox()
+                    messagebox.configure(state='normal')
+                    messagebox.insert(tk.END, text)
+                    messagebox.configure(state='disabled')
+                    messagebox.see(tk.END)
         elif method == 'login_list':
             users = data[2]
             processed = users.split(';')
