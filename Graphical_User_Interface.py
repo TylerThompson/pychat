@@ -1,6 +1,6 @@
 import socket
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, Menu
 import tkinter.scrolledtext as tkst
 from PIL import Image, ImageTk
 import threading
@@ -37,7 +37,9 @@ class PyChatApp(tk.Tk):
         self.target = None
         self.messageBox = None
         self.loginList = None
+        self.friendList = None
         self.lock = threading.RLock()
+
 
         # Check for client to exit
         if self.exit_event:
@@ -87,6 +89,12 @@ class PyChatApp(tk.Tk):
     def getLoginList(self):
         return self.loginList
 
+    def setFriendList(self, log):
+        self.friendList = log
+
+    def getFiendList(self):
+        return self.friendList
+
     def update_login_list(self, active_users):
         """Update listbox with list of active users"""
         login_list = self.getLoginList()
@@ -95,6 +103,14 @@ class PyChatApp(tk.Tk):
             login_list.insert(tk.END, user)
         login_list.select_set(0)
         self.target = login_list.get(login_list.curselection())
+
+    def update_friend_list(self, accepted_friends):
+        """update friend list when friend is added or removed"""
+        friend_list = self.getFiendList()
+        for friends in accepted_friends:
+            friend_list.insert(tk.END, friends)
+        friend_list.select_set(0)
+
 
     def on_closing_event(self):
         print('closing event now')
@@ -264,6 +280,7 @@ class ChatPage(tk.Frame):
         self.target = None
         tk.Frame.__init__(self, self.parent)
 
+
     def build(self):
         # Destroy previous versions of chat, or login
         for widget in self.winfo_children():
@@ -278,6 +295,10 @@ class ChatPage(tk.Frame):
         # List of Active users
         frame01 = tk.Frame(self.controller)
         frame01.grid(column=1, row=0, rowspan=3, sticky="nsew")
+        # list of Friends
+        frame04 = tk.Frame(self.controller)
+        frame04.grid(column=1, row=1, rowspan=2, sticky="nsew")
+
         # Message entry
         self.messagebox = tk.Frame(self.controller)
         self.messagebox.grid(column=0, row=2, columnspan=1, sticky="nsew")
@@ -310,11 +331,18 @@ class ChatPage(tk.Frame):
         # Button widget for sending messages
         self.send_button = tk.Button(frame03, text='Send', bg='#0084ff', activebackground='#0084ff', activeforeground='white', foreground='white', command=lambda: self.send_entry_event)
 
+        # Listbox widget for displaying friends and selecting them
+        self.friends_list = tk.Listbox(frame04, selectmode=tk.SINGLE, exportselection=False)
+        self.friends_list.bind('<<ListboxSelect>>', self.option_menu_event)
+        self.controller.setFriendList(self.friends_list)
+
+
         # Positioning widgets in frame
         self.messages_list.pack(fill=tk.BOTH, expand=tk.YES)
         self.logins_list.pack(fill=tk.BOTH, expand=tk.YES)
         self.entry.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
         self.send_button.pack(side=tk.RIGHT, fill=tk.BOTH, expand=tk.YES)
+        self.friends_list.pack(fill=tk.BOTH, expand=tk.YES)
 
         # Send request for current users
         self.controller.sock.send("update_login_list".encode(ENCODING))
@@ -323,6 +351,10 @@ class ChatPage(tk.Frame):
         mythread = threading.Thread(target=self.controller.run)
         mythread.daemon = True
         mythread.start()
+
+    """right clicking on user """
+    def option_menu_event(self, event):
+        print("selected someone")
 
     def selected_login_event(self, event):
         """Set as target currently selected login on login list"""
