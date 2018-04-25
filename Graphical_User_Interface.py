@@ -7,6 +7,7 @@ import threading
 import select
 import os
 
+
 ENCODING = 'utf-8'
 HOST = 'localhost'
 PORT = 8080
@@ -110,6 +111,7 @@ class PyChatApp(tk.Tk):
         for friends in accepted_friends:
             friend_list.insert(tk.END, friends)
         friend_list.select_set(0)
+        self.target = friend_list.get(friend_list.curselection())
 
 
     def on_closing_event(self):
@@ -180,6 +182,10 @@ class PyChatApp(tk.Tk):
             users = data[2]
             processed = users.split(';')
             self.update_login_list(processed)
+        elif method == 'viewFriends':
+            friends = data[2]
+            processed = friends.split(';')
+            self.update_friend_list(processed)
 
     def connect_to_server(self):
         """Connect to server via socket interface, return (is_connected)"""
@@ -280,7 +286,6 @@ class ChatPage(tk.Frame):
         self.target = None
         tk.Frame.__init__(self, self.parent)
 
-
     def build(self):
         # Destroy previous versions of chat, or login
         for widget in self.winfo_children():
@@ -298,7 +303,6 @@ class ChatPage(tk.Frame):
         # list of Friends
         frame04 = tk.Frame(self.controller)
         frame04.grid(column=1, row=1, rowspan=2, sticky="nsew")
-
         # Message entry
         self.messagebox = tk.Frame(self.controller)
         self.messagebox.grid(column=0, row=2, columnspan=1, sticky="nsew")
@@ -311,7 +315,6 @@ class ChatPage(tk.Frame):
         self.controller.rowconfigure(2, weight=8)
         self.controller.columnconfigure(0, weight=1)
         self.controller.columnconfigure(1, weight=1)
-
         # ScrolledText widget for displaying messages
         self.messages_list = tkst.ScrolledText(frame00, wrap=tk.WORD, height=20)
         self.messages_list.insert(tk.END, 'Welcome to Python Chat, ' + self.controller.getUsername() + '\n')
@@ -333,7 +336,7 @@ class ChatPage(tk.Frame):
 
         # Listbox widget for displaying friends and selecting them
         self.friends_list = tk.Listbox(frame04, selectmode=tk.SINGLE, exportselection=False)
-        self.friends_list.bind('<<ListboxSelect>>', self.option_menu_event)
+        # self.friends_list.bind('<<ListboxSelect>>', self.option_menu_event)
         self.controller.setFriendList(self.friends_list)
 
 
@@ -346,6 +349,9 @@ class ChatPage(tk.Frame):
 
         # Send request for current users
         self.controller.sock.send("update_login_list".encode(ENCODING))
+
+        # Send request for current friends
+        self.controller.sock.send("viewFriends".encode(ENCODING))
 
         # Run listeners for getting messages and other data from server at all times
         mythread = threading.Thread(target=self.controller.run)

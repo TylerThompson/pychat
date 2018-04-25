@@ -5,6 +5,7 @@ import socket
 import queue
 from Server_Helpers import *
 
+
 ENCODING = 'utf-8'
 HOST = 'localhost'
 PORT = 8080
@@ -47,6 +48,7 @@ class Server(threading.Thread):
         print('You can do the following at anytime')
         print('"quit" to quit the server')
         print('"clients" to show list of active users')
+
         while not self.shutdown:
             message = input()
             if message == "quit":
