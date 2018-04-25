@@ -336,9 +336,8 @@ class ChatPage(tk.Frame):
 
         # Listbox widget for displaying friends and selecting them
         self.friends_list = tk.Listbox(frame04, selectmode=tk.SINGLE, exportselection=False)
-        # self.friends_list.bind('<<ListboxSelect>>', self.option_menu_event)
+        self.friends_list.bind('<<ListboxSelect>>', self.option_menu_event)
         self.controller.setFriendList(self.friends_list)
-
 
         # Positioning widgets in frame
         self.messages_list.pack(fill=tk.BOTH, expand=tk.YES)
@@ -351,7 +350,8 @@ class ChatPage(tk.Frame):
         self.controller.sock.send("update_login_list".encode(ENCODING))
 
         # Send request for current friends
-        self.controller.sock.send("viewFriends".encode(ENCODING))
+        methodRequest = "GUI|viewFriends|" + self.controller.getUsername()
+        self.controller.sock.send(methodRequest.encode(ENCODING))
 
         # Run listeners for getting messages and other data from server at all times
         mythread = threading.Thread(target=self.controller.run)

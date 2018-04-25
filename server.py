@@ -21,6 +21,7 @@ class Server(threading.Thread):
 
         self.connection_list = []
         self.login_list = {}
+        self.friend_list = {}
         self.queue = queue.Queue()
 
         self.shutdown = False
@@ -148,7 +149,7 @@ class Server(threading.Thread):
 
 
     def process_data(self, data, connection):
-        #print('processing data')
+        # print('processing data')
         """Process received data"""
         if data:
             message = data.decode(ENCODING)
@@ -217,6 +218,7 @@ class Server(threading.Thread):
             i = i+1
         logins += ';all' + '\n'
         self.queue.put(('all', 'server', logins.encode(ENCODING)))
+
 
 # Create new server with (IP, port)
 if __name__ == '__main__':
